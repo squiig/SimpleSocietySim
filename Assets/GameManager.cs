@@ -5,14 +5,31 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
 	public GameObject resBoxPrefab;
+	public GameObject citizenPrefab;
 	public float fieldRadius = 20f;
+	public int citizenSpawnCount = 5;
 	public int resBoxSpawnCount = 100;
+	public float citizenStartingCapital = 20f;
 
     // Start is called before the first frame update
     void Start()
     {
+		SpawnCitizens();
 		SpawnResBoxes();
     }
+
+	void SpawnCitizens()
+	{
+		for (int i = 0; i < citizenSpawnCount; i++)
+		{
+			Vector3 target = new Vector3(0f, 1f, 0f);
+			target.x = Random.value * fieldRadius * 2 - fieldRadius;
+			target.z = Random.value * fieldRadius * 2 - fieldRadius;
+			var go = Instantiate(citizenPrefab, target, Quaternion.identity);
+			Citizen citizen = go.GetComponent<Citizen>();
+			citizen.money = citizenStartingCapital;
+		}
+	}
 
 	void SpawnResBoxes()
 	{
@@ -28,8 +45,8 @@ public class GameManager : MonoBehaviour
 		}
 	}
 
-    // Update is called once per frame
-    void Update()
+	// Update is called once per frame
+	void Update()
     {
         
     }
