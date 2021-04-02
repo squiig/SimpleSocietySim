@@ -5,7 +5,6 @@ public class Citizen : MonoBehaviour
 {
 	GameManager gameManager;
 	Vector3 origin;
-	[SerializeField] // temp
 	Vector3 target;
 	Vector3 anchor;
 	float timer;
@@ -88,11 +87,7 @@ public class Citizen : MonoBehaviour
 
 		// Traveling
 		float targetDist = Vector3.Distance(transform.position, target);
-		bool canAffordTransport = targetDist * gameManager.transportCostPerMeter <= money;
 		bool isBusinessTrip = !isIdling;
-
-		if (isBusinessTrip && !canAffordTransport)
-			return; // F
 
 		bool destinationReached = targetDist <= .001f;
 		if (destinationReached)
@@ -104,16 +99,22 @@ public class Citizen : MonoBehaviour
 		}
 		else
 		{
-			// Walk
 			Vector3 nextStep = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
-			nextStep.y = origin.y;
-			transform.position = nextStep;
 
 			if (isBusinessTrip)
 			{
 				float stepDist = Vector3.Distance(transform.position, nextStep);
-				AddMoney(-stepDist * gameManager.transportCostPerMeter); // travelling costs
+				float travelCosts = stepDist * gameManager.transportCostPerMeter;
+				bool canAffordStep = travelCosts <= money;
+
+				if (!canAffordStep)
+					return;
+
+				AddMoney(-travelCosts);
 			}
+
+			nextStep.y = origin.y;
+			transform.position = nextStep;
 		}
 	}
 
