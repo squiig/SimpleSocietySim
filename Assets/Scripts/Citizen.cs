@@ -82,8 +82,8 @@ public class Citizen : MonoBehaviour
 		// Idling (no cost)
 		if (isIdling && Random.value < .001f)
 		{
-			target.x = Mathf.Clamp(anchor.x + Random.Range(-1, 1) * idlingRadius, -fieldRadius, fieldRadius);
-			target.z = Mathf.Clamp(anchor.z + Random.Range(-1, 1) * idlingRadius, -fieldRadius, fieldRadius);
+			target.x = Mathf.Clamp(anchor.x + Random.Range(-1f, 1f) * idlingRadius, -fieldRadius, fieldRadius);
+			target.z = Mathf.Clamp(anchor.z + Random.Range(-1f, 1f) * idlingRadius, -fieldRadius, fieldRadius);
 		}
 
 		// Traveling
@@ -129,6 +129,9 @@ public class Citizen : MonoBehaviour
 	{
 		anchor = transform.position;
 		isIdling = true;
+
+		secondaryText.text = $"{totalResBoxesOwned} boxes";
+		secondaryText.color = new Color(0f, 0.5f, 1f);
 	}
 
 	void RegisterProfit(float profit)
