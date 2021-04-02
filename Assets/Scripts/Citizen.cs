@@ -262,7 +262,7 @@ public class Citizen : MonoBehaviour
 	void OnTriggerEnter(Collider collision)
 	{
 		var box = collision.gameObject.GetComponent<ResBox>();
-		if (box)
+		if (box != null && !isIdling)
 		{
 			totalResBoxesOwned++;
 			Destroy(collision.gameObject);

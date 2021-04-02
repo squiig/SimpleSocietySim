@@ -268,7 +268,7 @@ MonoBehaviour:
   baseResBoxValuation: 0
   totalResBoxesOwned: 0
   money: 0
-  idlingRadius: 2
+  idlingRadius: 1
   isDoomed: 0
   isIdling: 0
   lastSaleProfit: 0
