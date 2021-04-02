@@ -10,6 +10,8 @@ public class GameManager : MonoBehaviour
 	public int citizenSpawnCount = 5;
 	public int resBoxSpawnCount = 100;
 	public float citizenStartingCapital = 20f;
+	public float priceMagnifier = 100f;
+	public float transportCostPerMeter = 1f;
 
     // Start is called before the first frame update
     void Start()
@@ -27,7 +29,7 @@ public class GameManager : MonoBehaviour
 			target.z = Random.value * fieldRadius * 2 - fieldRadius;
 			var go = Instantiate(citizenPrefab, target, Quaternion.identity);
 			Citizen citizen = go.GetComponent<Citizen>();
-			citizen.money = citizenStartingCapital;
+			citizen.AddMoney(citizenStartingCapital);
 		}
 	}
 
