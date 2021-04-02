@@ -5,7 +5,7 @@ public class Citizen : MonoBehaviour
 {
 	GameManager gameManager;
 	Vector3 origin;
-	[SerializeField]
+	[SerializeField] // temp
 	Vector3 target;
 	Vector3 anchor;
 	float timer;
@@ -86,16 +86,18 @@ public class Citizen : MonoBehaviour
 			target.z = Mathf.Clamp(anchor.z + Random.Range(-1, 1) * idlingRadius, -fieldRadius, fieldRadius);
 		}
 
+		// Traveling
 		float targetDist = Vector3.Distance(transform.position, target);
 		bool canAffordTransport = targetDist * gameManager.transportCostPerMeter <= money;
+		bool isBusinessTrip = !isIdling;
 
-		if (!canAffordTransport && !isIdling)
-			return;
+		if (isBusinessTrip && !canAffordTransport)
+			return; // F
 
-		bool destinationReached = targetDist <= .01f;
+		bool destinationReached = targetDist <= .001f;
 		if (destinationReached)
 		{
-			if (!isIdling) // were we on a business trip?
+			if (isBusinessTrip)
 			{
 				StartIdling();
 			}
@@ -103,14 +105,14 @@ public class Citizen : MonoBehaviour
 		else
 		{
 			// Walk
-			Vector3 nextStep = Vector3.MoveTowards(anchor, target, speed * Time.deltaTime);
+			Vector3 nextStep = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
 			nextStep.y = origin.y;
 			transform.position = nextStep;
 
-			if (!isIdling)
+			if (isBusinessTrip)
 			{
 				float stepDist = Vector3.Distance(transform.position, nextStep);
-				AddMoney(-stepDist * gameManager.transportCostPerMeter);
+				AddMoney(-stepDist * gameManager.transportCostPerMeter); // travelling costs
 			}
 		}
 	}
@@ -141,45 +143,52 @@ public class Citizen : MonoBehaviour
 
 	bool TryStartBusiness()
 	{
-		bool success = false;
+		bool foundStrategy = false;
 
 		// Find the current most profitable strategy
-		if (GetGatheringCost() < money)
+		if (GetGatheringCost() <= money)
 		{
-			success = GatherResBoxes();
+			foundStrategy = TryGatherResBox();
 		}
 
-		return success;
+		if (foundStrategy)
+		{
+			anchor = transform.position;
+		}
+
+		return foundStrategy;
 	}
 
 	#region Gathering Strategy
+	bool TryGatherResBox()
+	{
+		var closestBox = GetClosestResBox();
+		if (closestBox == null)
+			return false;
+
+		target = closestBox.transform.position;
+		target.y = origin.y;
+
+		return true;
+	}
 
 	float GetGatheringCost()
 	{
-		var boxes = FindObjectsOfType<ResBox>();
-		if (boxes.Length <= 0)
-			return 0f;
+		var closestBox = GetClosestResBox();
+		if (closestBox == null)
+			return float.PositiveInfinity; // maybe not the most future-proof output, but it should work for now
 
-		float closestDist = Vector3.Distance(transform.position, boxes[0].transform.position);
-		foreach (var box in boxes)
-		{
-			float dist = Vector3.Distance(transform.position, box.transform.position);
-			if (dist < closestDist)
-			{
-				closestDist = dist;
-			}
-		}
+		float dist = Vector3.Distance(transform.position, closestBox.transform.position);
 
-		return closestDist * gameManager.transportCostPerMeter;
+		return dist * gameManager.transportCostPerMeter;
 	}
 
-	bool GatherResBoxes()
+	ResBox GetClosestResBox()
 	{
 		var boxes = FindObjectsOfType<ResBox>();
 		if (boxes.Length <= 0)
 		{
-			target = transform.position;
-			return false;
+			return null;
 		}
 
 		ResBox closestBox = boxes[0];
@@ -193,10 +202,8 @@ public class Citizen : MonoBehaviour
 				closestBox = box;
 			}
 		}
-		target = closestBox.transform.position;
-		target.y = origin.y;
 
-		return true;
+		return closestBox;
 	}
 	#endregion
 
