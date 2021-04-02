@@ -132,7 +132,7 @@ public class Citizen : MonoBehaviour
 		isIdling = true;
 
 		secondaryText.text = $"{totalResBoxesOwned} boxes";
-		secondaryText.color = new Color(0f, 0.5f, 1f);
+		secondaryText.color = new Color(0f, 0.6f, 1f);
 	}
 
 	void RegisterProfit(float profit)
