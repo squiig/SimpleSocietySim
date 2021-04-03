@@ -3,58 +3,68 @@ using UnityEngine;
 
 public class Citizen : MonoBehaviour
 {
-	GameManager gameManager;
-	Vector3 origin;
-	Vector3 target;
-	Vector3 anchor;
-	float timer;
-	float totalSeconds;
-	float retryMoment;
+	public enum BusinessStrategy
+	{
+		NONE,
+		GATHERING,
+		TRADING,
+		SERVICING
+	}
+
+	GameManager _gameManager;
+	Vector3 _origin;
+	Vector3 _target;
+	Vector3 _anchor;
+	float _timer;
+	float _totalSeconds;
+	float _restrategizingMoment;
 
 	public TMP_Text moneyText;
 	public TMP_Text secondaryText;
-	public float fieldRadius = 20f;
-	public float speed = 5f;
-	public float baseResBoxValuation = 0f; // starts out random, but can fluctuate by effect of profit margins
+	public float baseResBoxValuation; // starts out random, but can fluctuate by effect of profit margins
+	public float maxBuyingPrice;
 	public int totalResBoxesOwned; // the primary asset that can be found or bought
-	[SerializeField]
-	float money;
-	public float idlingRadius = 2f;
+
+	[SerializeField] float _speed = 5f;
+	[SerializeField] float _fieldRadius = 20f;
+	[SerializeField] float _idlingRadius = 2f;
+	[SerializeField] float _opportunityWaitingTime = 2f;
 
 	[Header("Read-Only")]
-	public bool isDoomed; // meaning they dont have an existing cashflow + dont own assets + cant afford any type of investment right now
-	[SerializeField]
-	bool isIdling; // just for aesthetic effect, doesn't cost money
+	[SerializeField] float _liquidMoney;
+	//[SerializeField] bool _isDoomed; // meaning they dont have an existing cashflow + dont own assets + cant afford any type of investment right now
+	[SerializeField] bool _isIdling; // just for aesthetic effect, doesn't cost money
+	[SerializeField] BusinessStrategy _currentStrategy;
+	[SerializeField] int _totalResBoxesGathered;
+	[SerializeField] float _totalGatheringTravelCosts;
+	[SerializeField] float _latestProfit;
+	[SerializeField] float _latestProfitMargin;
+	[SerializeField] float _profitGrowth;
 
-	[SerializeField]
-	float lastSaleProfit;
-
-	[SerializeField]
-	float profitTrend;
+	public float AverageResBoxAcquisitionCost => _totalGatheringTravelCosts / _totalResBoxesGathered;
 
 	// Never goes below the citizen's base valuation of one res box
-	public float MinimumResBoxSellingPrice => Mathf.Max(baseResBoxValuation, baseResBoxValuation / (totalResBoxesOwned + 1) * gameManager.priceMagnifier);
+	public float MinimumResBoxSellingPrice => Mathf.Max(baseResBoxValuation, baseResBoxValuation / (totalResBoxesOwned + 1) * _gameManager.priceMagnifier);
 
-	public float ProfitTrend => profitTrend;
+	public float ProfitGrowth => _profitGrowth;
 
-	public bool AreProfitsIncreasing => ProfitTrend > 0;
+	public bool AreProfitsIncreasing => ProfitGrowth > 0;
 
-	public float TotalProfits => money - gameManager.citizenStartingCapital;
+	public float TotalProfits => _liquidMoney - _gameManager.citizenStartingCapital;
 
-	public float ProfitPerSecond => TotalProfits / totalSeconds;
+	public float ProfitPerSecond => TotalProfits / _totalSeconds;
 
 	void Start()
 	{
-		gameManager = FindObjectOfType<GameManager>();
+		_gameManager = FindObjectOfType<GameManager>();
 
-		timer = 1;
+		_timer = 1;
 
-		origin = transform.position;
-		target = origin;
+		_origin = transform.position;
+		_target = _origin;
 
 		baseResBoxValuation = Random.value;
-
-		GetComponent<Renderer>().material.color = Random.ColorHSV(0, 1, 1, 1, 1, 1, 1, 1);
+		maxBuyingPrice = baseResBoxValuation * 1.1f;
 
 		StartIdling();
 	}
@@ -64,30 +74,31 @@ public class Citizen : MonoBehaviour
 		Tick();
 		RefreshHUD();
 
-		bool shouldHustle = isIdling && !AreProfitsIncreasing && retryMoment < totalSeconds;
+		bool shouldHustle = _isIdling && !AreProfitsIncreasing && _restrategizingMoment < _totalSeconds;
 		if (shouldHustle)
 		{
-			bool canHustle = TryStartBusiness();
-			if (canHustle)
+			BusinessStrategy bestStrategy = CalculateBestStrategy();
+
+			if (bestStrategy != BusinessStrategy.NONE)
 			{
-				isIdling = false;
+				StartStrategy(bestStrategy);
 			}
-			else // if we cant hustle, idle for a bit longer until new opportunity arises
+			else // if we're stumped, idle for a bit longer until new opportunity arises
 			{
-				retryMoment = totalSeconds + 2;
+				_restrategizingMoment = _totalSeconds + _opportunityWaitingTime;
 			}
 		}
 
 		// Idling (no cost)
-		if (isIdling && Random.value < .001f)
+		if (_isIdling && Random.value < .001f)
 		{
-			target.x = Mathf.Clamp(anchor.x + Random.Range(-1f, 1f) * idlingRadius, -fieldRadius, fieldRadius);
-			target.z = Mathf.Clamp(anchor.z + Random.Range(-1f, 1f) * idlingRadius, -fieldRadius, fieldRadius);
+			_target.x = Mathf.Clamp(_anchor.x + Random.Range(-1f, 1f) * _idlingRadius, -_fieldRadius, _fieldRadius);
+			_target.z = Mathf.Clamp(_anchor.z + Random.Range(-1f, 1f) * _idlingRadius, -_fieldRadius, _fieldRadius);
 		}
 
 		// Traveling
-		float targetDist = Vector3.Distance(transform.position, target);
-		bool isBusinessTrip = !isIdling;
+		float targetDist = Vector3.Distance(transform.position, _target);
+		bool isBusinessTrip = !_isIdling;
 
 		bool destinationReached = targetDist <= .001f;
 		if (destinationReached)
@@ -99,68 +110,82 @@ public class Citizen : MonoBehaviour
 		}
 		else
 		{
-			Vector3 nextStep = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
+			Vector3 nextStep = Vector3.MoveTowards(transform.position, _target, _speed * Time.deltaTime);
 
 			if (isBusinessTrip)
 			{
 				float stepDist = Vector3.Distance(transform.position, nextStep);
-				float travelCosts = stepDist * gameManager.transportCostPerMeter;
-				bool canAffordStep = travelCosts <= money;
+				float travelCosts = stepDist * _gameManager.travelCostPerMeter;
+				bool canAffordStep = travelCosts <= _liquidMoney;
 
 				if (!canAffordStep)
 					return;
 
 				AddMoney(-travelCosts);
+
+				if (_currentStrategy == BusinessStrategy.GATHERING)
+				{
+					_totalGatheringTravelCosts += travelCosts;
+				}
 			}
 
-			nextStep.y = origin.y;
+			nextStep.y = _origin.y;
 			transform.position = nextStep;
 		}
 	}
 
 	public void AddMoney(float money)
 	{
-		this.money += money;
-
-		//secondaryText.text = $"{(money > 0 ? "+" : "")}${money:n2}";
-		//secondaryText.color = Color.magenta;
+		_liquidMoney += money;
 	}
 
 	void StartIdling()
 	{
-		anchor = transform.position;
-		isIdling = true;
+		_anchor = transform.position;
+		_isIdling = true;
+		_currentStrategy = BusinessStrategy.NONE;
 
 		secondaryText.text = $"{totalResBoxesOwned} boxes";
 		secondaryText.color = new Color(0f, 0.6f, 1f);
 	}
 
-	void RegisterProfit(float profit)
+	void StartStrategy(BusinessStrategy strategy)
 	{
-		profitTrend = profit / (lastSaleProfit == 0 ? profit : lastSaleProfit) - 1;
-		lastSaleProfit = profit;
+		_isIdling = false;
+		_anchor = transform.position;
+		_currentStrategy = strategy;
 
-		// Display the profit
-		secondaryText.text = ProfitTrend == 0 ? "" : $"{(AreProfitsIncreasing ? "+" : "") + (ProfitTrend * 100):n2}%";
-		secondaryText.color = AreProfitsIncreasing ? Color.green : Color.red;
+		switch (strategy)
+		{
+			case BusinessStrategy.NONE:
+				break;
+			case BusinessStrategy.GATHERING:
+				TryGatherResBox();
+				break;
+			case BusinessStrategy.TRADING:
+				break;
+			case BusinessStrategy.SERVICING:
+				break;
+			default:
+				break;
+		}
 	}
 
-	bool TryStartBusiness()
+	BusinessStrategy CalculateBestStrategy()
 	{
-		bool foundStrategy = false;
+		BusinessStrategy strategy = BusinessStrategy.NONE;
+		float lowestCost = float.PositiveInfinity;
 
-		// Find the current most profitable strategy
-		if (GetGatheringCost() <= money)
+		float gatheringCost = GetGatheringCost();
+		if (gatheringCost <= _liquidMoney && gatheringCost < lowestCost)
 		{
-			foundStrategy = TryGatherResBox();
+			lowestCost = gatheringCost;
+			strategy = BusinessStrategy.GATHERING;
 		}
 
-		if (foundStrategy)
-		{
-			anchor = transform.position;
-		}
+		// more strategies here
 
-		return foundStrategy;
+		return strategy;
 	}
 
 	#region Gathering Strategy
@@ -170,8 +195,8 @@ public class Citizen : MonoBehaviour
 		if (closestBox == null)
 			return false;
 
-		target = closestBox.transform.position;
-		target.y = origin.y;
+		_target = closestBox.transform.position;
+		_target.y = _origin.y;
 
 		return true;
 	}
@@ -182,9 +207,9 @@ public class Citizen : MonoBehaviour
 		if (closestBox == null)
 			return float.PositiveInfinity; // maybe not the most future-proof output, but it should work for now
 
-		float dist = Vector3.Distance(transform.position, closestBox.transform.position);
+		float dist = Vector3.Distance(_anchor, closestBox.transform.position);
 
-		return dist * gameManager.transportCostPerMeter;
+		return dist * _gameManager.travelCostPerMeter;
 	}
 
 	ResBox GetClosestResBox()
@@ -196,10 +221,10 @@ public class Citizen : MonoBehaviour
 		}
 
 		ResBox closestBox = boxes[0];
-		float closestDist = Vector3.Distance(transform.position, boxes[0].transform.position);
+		float closestDist = Vector3.Distance(_anchor, boxes[0].transform.position);
 		foreach (var box in boxes)
 		{
-			float dist = Vector3.Distance(transform.position, box.transform.position);
+			float dist = Vector3.Distance(_anchor, box.transform.position);
 			if (dist < closestDist)
 			{
 				closestDist = dist;
@@ -212,59 +237,82 @@ public class Citizen : MonoBehaviour
 	#endregion
 
 	#region Trading Strategy
-	public bool TryBuyResBox(int amount, float offer, Citizen customer)
+	public bool TryBuyResBox(int amount, float unitOffer, Citizen customer)
 	{
 		// Considerations
 		if (totalResBoxesOwned < amount) // can i sell that much?
 			return false;
 
-		float price = MinimumResBoxSellingPrice + ((offer - MinimumResBoxSellingPrice) / 2); // just compromise in the middle, keep it simple for now
+		float unitPrice = MinimumResBoxSellingPrice + ((unitOffer - MinimumResBoxSellingPrice) / 2); // just compromise in the middle, keep it simple for now
+		float totalPrice = amount * unitPrice;
 
-		if (price < MinimumResBoxSellingPrice) // would i lose money?
+		float minimumTotalPrice = MinimumResBoxSellingPrice * amount;
+		if (totalPrice < minimumTotalPrice) // would i lose value?
 			return false;
 
 		// Perform the sale
-		SellResBox(amount, price, customer);
+		SellResBox(amount, totalPrice, customer);
 
 		return true;
 	}
 
-	void SellResBox(int amount, float price, Citizen customer)
+	void SellResBox(int amount, float totalPrice, Citizen customer)
 	{
 		// Transaction
 		totalResBoxesOwned -= amount;
-		AddMoney(price);
-		customer.AddMoney(-price);
+		AddMoney(totalPrice);
+		customer.AddMoney(-totalPrice);
 		customer.totalResBoxesOwned += amount;
 
-		// Book keeping
-		float profit = price - MinimumResBoxSellingPrice;
+		// Bookkeeping
+		float profit = totalPrice - MinimumResBoxSellingPrice * amount;
+		RegisterRevenue(totalPrice, profit);
+	}
+	#endregion
+
+	#region Bookkeeping
+	void RegisterRevenue(float revenue, float profit)
+	{
 		RegisterProfit(profit);
+
+		float profitMargin = profit / revenue;
+		_latestProfitMargin = profitMargin;
+	}
+
+	void RegisterProfit(float profit)
+	{
+		_profitGrowth = profit / (_latestProfit == 0 ? profit : _latestProfit) - 1;
+		_latestProfit = profit;
+
+		// Display the profit
+		secondaryText.text = ProfitGrowth == 0 ? "" : $"{(AreProfitsIncreasing ? "+" : "") + (ProfitGrowth * 100):n2}%";
+		secondaryText.color = AreProfitsIncreasing ? Color.green : Color.red;
 	}
 	#endregion
 
 	void Tick()
 	{
-		timer -= Time.deltaTime;
+		_timer -= Time.deltaTime;
 
-		if (timer <= 0)
+		if (_timer <= 0)
 		{
-			timer = 1;
-			totalSeconds++;
+			_timer = 1;
+			_totalSeconds++;
 		}
 	}
 
 	void RefreshHUD()
 	{
-		moneyText.text = $"ƒ{money:n2}";
+		moneyText.text = $"ƒ{_liquidMoney:n2}";
 	}
 
 	void OnTriggerEnter(Collider collision)
 	{
 		var box = collision.gameObject.GetComponent<ResBox>();
-		if (box != null && !isIdling)
+		if (box != null && !_isIdling)
 		{
 			totalResBoxesOwned++;
+			_totalResBoxesGathered++;
 			Destroy(collision.gameObject);
 
 			secondaryText.text = "+1 box";

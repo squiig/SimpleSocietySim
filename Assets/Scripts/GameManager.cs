@@ -11,7 +11,7 @@ public class GameManager : MonoBehaviour
 	public int resBoxSpawnCount = 100;
 	public float citizenStartingCapital = 20f;
 	public float priceMagnifier = 100f;
-	public float transportCostPerMeter = 1f;
+	public float travelCostPerMeter = 1f;
 
     // Start is called before the first frame update
     void Start()
@@ -24,12 +24,13 @@ public class GameManager : MonoBehaviour
 	{
 		for (int i = 0; i < citizenSpawnCount; i++)
 		{
-			Vector3 target = new Vector3(0f, 1f, 0f);
+			Vector3 target = new Vector3(0f, 1.5f, 0f);
 			target.x = Random.value * fieldRadius * 2 - fieldRadius;
 			target.z = Random.value * fieldRadius * 2 - fieldRadius;
 			var go = Instantiate(citizenPrefab, target, Quaternion.identity);
 			Citizen citizen = go.GetComponent<Citizen>();
 			citizen.AddMoney(citizenStartingCapital);
+			citizen.GetComponent<Renderer>().material.color = Color.HSVToRGB(1f / citizenSpawnCount * (i + 1), 1f, 1f);
 		}
 	}
 
@@ -37,7 +38,7 @@ public class GameManager : MonoBehaviour
 	{
 		for (int i = 0; i < resBoxSpawnCount; i++)
 		{
-			Vector3 target = new Vector3(0f, 0.5f, 0f);
+			Vector3 target = new Vector3(0f, 1f, 0f);
 			target.x = Random.value * fieldRadius * 2 - fieldRadius;
 			target.z = Random.value * fieldRadius * 2 - fieldRadius;
 			Quaternion rot = Random.rotation;
