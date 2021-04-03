@@ -289,6 +289,7 @@ public class Citizen : MonoBehaviour
 		// Bookkeeping
 		float profit = totalPrice - MinimumResBoxSellingPrice * amount;
 		RegisterRevenue(totalPrice, profit);
+		_gameManager.RegisterConsumption(totalPrice);
 	}
 	#endregion
 
