@@ -14,6 +14,7 @@ public class Citizen : MonoBehaviour
 	GameManager _gameManager;
 	Vector3 _origin;
 	Vector3 _target;
+	GameObject _targetObject;
 	Vector3 _anchor;
 	float _timer;
 	float _totalSeconds;
@@ -54,6 +55,11 @@ public class Citizen : MonoBehaviour
 
 	public float ProfitPerSecond => TotalProfits / _totalSeconds;
 
+	public void AddMoney(float money)
+	{
+		_liquidMoney += money;
+	}
+
 	void Start()
 	{
 		_gameManager = FindObjectOfType<GameManager>();
@@ -66,7 +72,7 @@ public class Citizen : MonoBehaviour
 		baseResBoxValuation = Random.value;
 		maxBuyingPrice = baseResBoxValuation * 1.1f;
 
-		StartIdling();
+		SetIdling(true);
 	}
 
 	void Update()
@@ -105,53 +111,68 @@ public class Citizen : MonoBehaviour
 		{
 			if (isBusinessTrip)
 			{
-				StartIdling();
+				SetIdling(true);
 			}
 		}
 		else
 		{
-			Vector3 nextStep = Vector3.MoveTowards(transform.position, _target, _speed * Time.deltaTime);
-
-			if (isBusinessTrip)
+			bool businessTargetDisappeared = isBusinessTrip && _currentStrategy == BusinessStrategy.GATHERING && _targetObject == null;
+			if (businessTargetDisappeared)
 			{
-				float stepDist = Vector3.Distance(transform.position, nextStep);
-				float travelCosts = stepDist * _gameManager.travelCostPerMeter;
-				bool canAffordStep = travelCosts <= _liquidMoney;
-
-				if (!canAffordStep)
-					return;
-
-				AddMoney(-travelCosts);
-
-				if (_currentStrategy == BusinessStrategy.GATHERING)
-				{
-					_totalGatheringTravelCosts += travelCosts;
-				}
+				SetIdling(true);
 			}
 
-			nextStep.y = _origin.y;
-			transform.position = nextStep;
+			Move();
 		}
 	}
 
-	public void AddMoney(float money)
+	void Move()
 	{
-		_liquidMoney += money;
+		Vector3 nextStep = Vector3.MoveTowards(transform.position, _target, _speed * Time.deltaTime);
+
+		bool isBusinessTrip = !_isIdling;
+		if (isBusinessTrip)
+		{
+			float stepDist = Vector3.Distance(transform.position, nextStep);
+			float travelCosts = stepDist * _gameManager.travelCostPerMeter;
+			bool canAffordStep = travelCosts <= _liquidMoney;
+
+			if (!canAffordStep)
+				return;
+
+			AddMoney(-travelCosts);
+
+			if (_currentStrategy == BusinessStrategy.GATHERING)
+			{
+				_totalGatheringTravelCosts += travelCosts;
+			}
+		}
+
+		nextStep.y = _origin.y;
+		transform.position = nextStep;
 	}
 
-	void StartIdling()
+	void SetIdling(bool idle)
 	{
-		_anchor = transform.position;
-		_isIdling = true;
-		_currentStrategy = BusinessStrategy.NONE;
+		if (idle)
+		{
+			_isIdling = true;
+			_anchor = transform.position;
+			_target = _anchor;
+			_currentStrategy = BusinessStrategy.NONE;
 
-		secondaryText.text = $"{totalResBoxesOwned} boxes";
-		secondaryText.color = new Color(0f, 0.6f, 1f);
+			secondaryText.text = $"{totalResBoxesOwned} boxes";
+			secondaryText.color = new Color(0f, 0.6f, 1f);
+		}
+		else
+		{
+			_isIdling = false;
+		}
 	}
 
 	void StartStrategy(BusinessStrategy strategy)
 	{
-		_isIdling = false;
+		SetIdling(false);
 		_anchor = transform.position;
 		_currentStrategy = strategy;
 
@@ -195,6 +216,7 @@ public class Citizen : MonoBehaviour
 		if (closestBox == null)
 			return false;
 
+		_targetObject = closestBox.gameObject;
 		_target = closestBox.transform.position;
 		_target.y = _origin.y;
 
