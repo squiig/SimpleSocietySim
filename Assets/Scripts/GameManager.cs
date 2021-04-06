@@ -2,12 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using System.Linq;
 
 public class GameManager : MonoBehaviour
 {
 	public GameObject resBoxPrefab;
 	public GameObject citizenPrefab;
 	public TMP_Text gdpLabel;
+	public TMP_Text totalMoneyLabel;
 	public float fieldRadius = 25f;
 	public int citizenSpawnCount = 3;
 	public int resBoxSpawnCount = 80;
@@ -15,7 +17,8 @@ public class GameManager : MonoBehaviour
 	public float priceMagnifier = 100f;
 	public float travelCostPerMeter = 1f;
 
-	float _totalExpenditures;
+	[SerializeField] float _totalExpenditures;
+
 	List<Citizen> _citizens;
 
 	/// <summary>
@@ -23,7 +26,7 @@ public class GameManager : MonoBehaviour
 	/// </summary>
 	public float GDP => _totalExpenditures;
 
-	public static string CurrencySymbol => "ƒ";
+	public static string CurrencySymbol => "€"; // ƒ
 
 	public static string ResBoxSymbol => "BOX";
 
@@ -35,6 +38,14 @@ public class GameManager : MonoBehaviour
 	public void RefreshGDP()
 	{
 		gdpLabel.text = $"{CurrencySymbol}{GDP / citizenSpawnCount:n2} GDP per capita";
+
+		RefreshTotalMoneyLabel();
+	}
+
+	void RefreshTotalMoneyLabel()
+	{
+		float totalMoney = _citizens.Select(x => x.MoneyInWallet).Sum();
+		totalMoneyLabel.text = $"{CurrencySymbol}{totalMoney:n2} total";
 	}
 
 	public void RegisterConsumption(float amountSpent)
@@ -46,11 +57,12 @@ public class GameManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-		_totalExpenditures = citizenSpawnCount * citizenStartingCapital; // the only bit of "government spending" to account into GDP for now
-		RefreshGDP();
+		//_totalExpenditures = citizenSpawnCount * citizenStartingCapital; // the only bit of "government spending" to account into GDP for now
 
 		SpawnCitizens();
 		SpawnResBoxes();
+
+		RefreshGDP();
     }
 
 	void SpawnCitizens()

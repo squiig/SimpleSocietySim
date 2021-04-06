@@ -41,6 +41,7 @@ public class Citizen : MonoBehaviour
 	[SerializeField] float _opportunityWaitingTime = 2f;
 	[SerializeField] float _minimumProfitExpectation = 0.01f;
 	[SerializeField] float _startingProfitExpectation = 0.1f;
+	[SerializeField] float _investmentPercentage = 0.2f;
 
 	[Header("Read-Only")]
 	[SerializeField] float _liquidMoney;
@@ -299,6 +300,14 @@ public class Citizen : MonoBehaviour
 		BusinessStrategy strategy = BusinessStrategy.NONE;
 		float lowestCost = float.PositiveInfinity;
 
+		// Gathering
+		float gatheringCost = CalculateGatheringCost();
+		if (gatheringCost <= _liquidMoney && gatheringCost < lowestCost)
+		{
+			lowestCost = gatheringCost;
+			strategy = BusinessStrategy.GATHERING;
+		}
+
 		// Selling
 		if (totalResBoxesOwned > 0)
 		{
@@ -316,14 +325,6 @@ public class Citizen : MonoBehaviour
 		{
 			lowestCost = buyingCost;
 			strategy = BusinessStrategy.BUYING;
-		}
-
-		// Gathering
-		float gatheringCost = CalculateGatheringCost();
-		if (gatheringCost <= _liquidMoney && gatheringCost < lowestCost)
-		{
-			lowestCost = gatheringCost;
-			strategy = BusinessStrategy.GATHERING;
 		}
 
 		return strategy;
@@ -420,9 +421,9 @@ public class Citizen : MonoBehaviour
 
 		Halt(3f);
 
-		int buyAmount = 1;
-		float offer = CurrentBuyingPriceGoal;
-		bool success = other.TryBuyBox(buyAmount, offer, this);
+		float unitOffer = CurrentBuyingPriceGoal;
+		int buyAmount = Mathf.FloorToInt(_liquidMoney * _investmentPercentage / unitOffer);
+		bool success = other.TryBuyBox(buyAmount, unitOffer, this);
 
 		if (success)
 		{
@@ -480,17 +481,17 @@ public class Citizen : MonoBehaviour
 
 		Halt(3f);
 
-		int sellAmount = 1;
-		float offer = CurrentSellingPriceGoal;
-		bool success = other.TrySellBox(sellAmount, offer, this);
+		float unitOffer = CurrentSellingPriceGoal;
+		int sellAmount = Mathf.FloorToInt(totalResBoxesOwned * _investmentPercentage);
+		bool success = other.TrySellBox(sellAmount, unitOffer, this);
 
 		if (success)
 		{
-			_currentProfitExpectation *= 1.1f; // Business is good, increase profit expectations
+			//_currentProfitExpectation *= 1.1f; // Business is good, increase profit expectations
 		}
 		else
 		{
-			_currentProfitExpectation *= 0.9f; // Business sucks, decrease profit expectations
+			//_currentProfitExpectation *= 0.9f; // Business sucks, decrease profit expectations
 			_lastFailedTradePartner = other;
 		}
 
@@ -506,9 +507,19 @@ public class Citizen : MonoBehaviour
 		/*
 		 * Can the seller even handle this order?
 		 */
-		if (totalResBoxesOwned < amount)
+		if (amount <= 0)
+			return false;
+
+		if (amount > totalResBoxesOwned)
 		{
 			Debug.Log($"{name} can't sell {amount} {GameManager.ResBoxSymbol} to {buyer.name} because the order is <b>too big</b>.");
+
+			if (totalResBoxesOwned > 0) // Does the seller have any boxes at all?
+			{
+				Debug.Log("Let's try half the amount.");
+				return TryNegotiateTradeDeal(Mathf.RoundToInt(amount / 2), unitOffer, buyer, out currentTotalPrice);
+			}
+
 			return false;
 		}
 
@@ -527,12 +538,24 @@ public class Citizen : MonoBehaviour
 			Debug.Log($"The negotation starts at <b>{GameManager.FormatMoney(currentTotalPrice)}</b>...");
 
 		/*
-		 * If the customer can't afford that, the seller will try to make a final, minimum offer.
+		 * If the customer can't afford that, the order amount could be lowered or the seller could try to make a final, minimum offer.
 		 */
 		if (!buyer.CanPay(currentTotalPrice))
 		{
 			Debug.Log($"{buyer.name} <b>can't afford</b> {GameManager.FormatMoney(currentTotalPrice)}...");
 
+			/*
+			 * First, let's try lowering the amount.
+			 */
+			if (amount > 1)
+			{
+				Debug.Log("Let's try half the amount.");
+				return TryNegotiateTradeDeal(Mathf.RoundToInt(amount / 2), unitOffer, buyer, out currentTotalPrice);
+			}
+
+			/*
+			 * If that doesn't cut it, the seller will make his final offer for 1 box.
+			 */
 			float finalOffer = sellerMinimumTotalPrice;
 
 			Debug.Log($"{name} offers a <b>final deal</b> of {amount} {GameManager.ResBoxSymbol} to {buyer.name} for <b>{GameManager.FormatMoney(finalOffer)}</b>...");
@@ -543,6 +566,7 @@ public class Citizen : MonoBehaviour
 			if (!buyer.CanPay(finalOffer))
 			{
 				Debug.Log($"{buyer.name} still <b>can't afford</b> it.");
+
 				return false; // Otherwise the order will have to be canceled altogether
 			}
 
@@ -599,7 +623,8 @@ public class Citizen : MonoBehaviour
 
 	float CalculateSellingCost()
 	{
-		return CalculateCitizenFindingCost() + MinimumSellingPrice - TotalProfits / ProfitPerSecond;
+		float citizenFindingCost = CalculateCitizenFindingCost();
+		return Mathf.Max(citizenFindingCost, citizenFindingCost + MinimumSellingPrice - TotalProfits / ProfitPerSecond);
 	}
 
 	float CalculateCitizenFindingCost()
@@ -641,6 +666,15 @@ public class Citizen : MonoBehaviour
 
 	void SellResBox(int amount, float totalPrice, Citizen buyer)
 	{
+		// Bookkeeping
+		float profit = totalPrice - MinimumSellingPrice * amount;
+
+		_maxBuyingPriceMetric = MaxBuyingPrice;
+		_minSellingPriceMetric = MinimumSellingPrice;
+
+		RegisterRevenue(totalPrice, profit);
+		_gameManager.RegisterConsumption(totalPrice);
+
 		// Transaction
 		totalResBoxesOwned -= amount;
 		AddMoney(totalPrice);
@@ -648,14 +682,6 @@ public class Citizen : MonoBehaviour
 		buyer.totalResBoxesOwned += amount;
 
 		Debug.Log($"<color=yellow><b>{name}</b> sold <b>{amount} {GameManager.ResBoxSymbol}</b> to <b>{buyer.name}</b> for <b>{GameManager.FormatMoney(totalPrice)}</b>!</color>");
-
-		_maxBuyingPriceMetric = MaxBuyingPrice;
-		_minSellingPriceMetric = MinimumSellingPrice;
-
-		// Bookkeeping
-		float profit = totalPrice - MinimumSellingPrice * amount;
-		RegisterRevenue(totalPrice, profit);
-		_gameManager.RegisterConsumption(totalPrice);
 	}
 	#endregion
 
@@ -703,10 +729,11 @@ public class Citizen : MonoBehaviour
 		secondLabel.text = boxStatus;
 		secondLabel.color = new Color(0f, 0.75f, 1f);
 
-		string profitStatus = ProfitGrowth == 0 ? "-" : $"{(AreProfitsIncreasing ? "+" : "")}{ProfitGrowth * 100:n2}%";
+		float profitValue = _latestProfitMargin;
+		string profitStatus = profitValue == 0 ? "-" : $"{(profitValue > 0 ? "+" : "")}{profitValue * 100:n2}%";
 
 		thirdLabel.text = profitStatus;
-		thirdLabel.color = ProfitGrowth < 0 ? Color.red : Color.green;
+		thirdLabel.color = profitValue < 0 ? Color.red : Color.green;
 	}
 
 	void OnTriggerEnter(Collider collision)
