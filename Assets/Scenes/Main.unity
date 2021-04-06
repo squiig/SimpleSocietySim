@@ -181,7 +181,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: $100 GDP
+  m_text: "\u0192100,000.00 GDP"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -733,6 +733,21 @@ PrefabInstance:
       propertyPath: gdpLabel
       value: 
       objectReference: {fileID: 337772093}
+    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
+        type: 3}
+      propertyPath: resBoxSpawnCount
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
+        type: 3}
+      propertyPath: citizenSpawnCount
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
+        type: 3}
+      propertyPath: citizenStartingCapital
+      value: 100
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a1adf4d8ecc0ad148860229ee8b4e93d, type: 3}
 --- !u!1001 &4966633335228986455
@@ -755,7 +770,7 @@ PrefabInstance:
     - target: {fileID: 4966633335901449224, guid: 328ea320d57965844a58e0012132fb1a,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -0.5
       objectReference: {fileID: 0}
     - target: {fileID: 4966633335901449224, guid: 328ea320d57965844a58e0012132fb1a,
         type: 3}

@@ -49,10 +49,11 @@ public class GameManager : MonoBehaviour
 		_citizens = new List<Citizen>();
 		for (int i = 0; i < citizenSpawnCount; i++)
 		{
-			Vector3 target = new Vector3(0f, 1.5f, 0f);
+			Vector3 target = new Vector3(0f, 1f, 0f);
 			target.x = Random.value * fieldRadius * 2 - fieldRadius;
 			target.z = Random.value * fieldRadius * 2 - fieldRadius;
 			var go = Instantiate(citizenPrefab, target, Quaternion.identity);
+			go.name = $"Citizen {i+1}";
 			Citizen citizen = go.GetComponent<Citizen>();
 			citizen.AddMoney(citizenStartingCapital);
 			citizen.GetComponent<Renderer>().material.color = Color.HSVToRGB(1f / citizenSpawnCount * (i + 1), 1f, 1f);
@@ -64,7 +65,7 @@ public class GameManager : MonoBehaviour
 	{
 		for (int i = 0; i < resBoxSpawnCount; i++)
 		{
-			Vector3 target = new Vector3(0f, 1f, 0f);
+			Vector3 target = new Vector3(0f, .5f, 0f);
 			target.x = Random.value * fieldRadius * 2 - fieldRadius;
 			target.z = Random.value * fieldRadius * 2 - fieldRadius;
 			Quaternion rot = Random.rotation;

@@ -261,18 +261,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38ceeba1ed43866449218cb0131b63de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moneyText: {fileID: 8334080152486133519}
-  secondaryText: {fileID: 7242088365015946206}
-  fieldRadius: 20
-  speed: 5
+  moneyLabel: {fileID: 8334080152486133519}
+  secondaryLabel: {fileID: 7242088365015946206}
   baseResBoxValuation: 0
+  maxBuyingPrice: 0
   totalResBoxesOwned: 0
-  money: 0
-  idlingRadius: 0.5
-  isDoomed: 0
-  isIdling: 0
-  lastSaleProfit: 0
-  profitTrend: 0
+  _speed: 5
+  _fieldRadius: 25
+  _idlingRadius: 0.5
+  _opportunityWaitingTime: 2
+  _liquidMoney: 0
+  _isIdling: 0
+  _currentStrategy: 0
+  _totalResBoxesGathered: 0
+  _totalGatheringTravelCosts: 0
+  _latestProfit: 0
+  _latestProfitMargin: 0
+  _profitGrowth: 0
 --- !u!1 &2721646729544634683
 GameObject:
   m_ObjectHideFlags: 0

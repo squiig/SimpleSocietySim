@@ -47,9 +47,10 @@ MonoBehaviour:
     type: 3}
   citizenPrefab: {fileID: 891022432897842971, guid: d99372851223ccb4db92f25c4adb228f,
     type: 3}
+  gdpLabel: {fileID: 0}
   fieldRadius: 25
   citizenSpawnCount: 3
   resBoxSpawnCount: 80
-  citizenStartingCapital: 30
+  citizenStartingCapital: 50
   priceMagnifier: 100
-  transportCostPerMeter: 1
+  travelCostPerMeter: 1
