@@ -23,9 +23,18 @@ public class GameManager : MonoBehaviour
 	/// </summary>
 	public float GDP => _totalExpenditures;
 
+	public static string CurrencySymbol => "ƒ";
+
+	public static string ResBoxSymbol => "BOX";
+
+	public static string FormatMoney(float amount)
+	{
+		return $"{CurrencySymbol}{amount:n2}";
+	}
+
 	public void RefreshGDP()
 	{
-		gdpLabel.text = $"ƒ{GDP:n2} GDP";
+		gdpLabel.text = $"{CurrencySymbol}{GDP / citizenSpawnCount:n2} GDP per capita";
 	}
 
 	public void RegisterConsumption(float amountSpent)
