@@ -10,36 +10,53 @@ public class GameManager : MonoBehaviour
 	public GameObject citizenPrefab;
 	public TMP_Text gdpLabel;
 	public TMP_Text totalMoneyLabel;
+	public TMP_Text averageValuationLabel;
+	public TMP_Text averageTradingPriceLabel;
 	public float fieldRadius = 25f;
 	public int citizenSpawnCount = 3;
 	public int resBoxSpawnCount = 80;
-	public float citizenStartingCapital = 30f;
+	public float citizenStartingCapitalMin = 10f;
+	public float citizenStartingCapitalMax = 100f;
 	public float priceMagnifier = 100f;
 	public float travelCostPerMeter = 1f;
 
 	[SerializeField] float _totalExpenditures;
 
 	List<Citizen> _citizens;
+	List<float> _historicalUnitPrices;
 
 	/// <summary>
-	/// Represents a real-time snapshot of the nominal GDP.
+	/// Represents a real-time snapshot of the total nominal GDP.
 	/// </summary>
-	public float GDP => _totalExpenditures;
+	public float AllTimeNominalGDP => _totalExpenditures;
 
 	public static string CurrencySymbol => "€"; // ƒ
 
 	public static string ResBoxSymbol => "BOX";
+
+	public float CurrentAverageResBoxTradingPrice => _historicalUnitPrices.Sum() / _historicalUnitPrices.Count;
+
+	public float CurrentAverageResBoxValuation => _citizens.Select(x => x.baseResBoxValuation).Sum() / _citizens.Count;
 
 	public static string FormatMoney(float amount)
 	{
 		return $"{CurrencySymbol}{amount:n2}";
 	}
 
-	public void RefreshGDP()
+	public void RegisterSale(float amountSpent, int amountSold)
 	{
-		gdpLabel.text = $"{CurrencySymbol}{GDP / citizenSpawnCount:n2} GDP per capita";
+		_totalExpenditures += amountSpent;
 
-		RefreshTotalMoneyLabel();
+		float unitPrice = amountSpent / amountSold;
+
+		_historicalUnitPrices.Add(unitPrice);
+
+		RefreshGDP();
+	}
+
+	void RefreshGDP()
+	{
+		gdpLabel.text = $"{CurrencySymbol}{AllTimeNominalGDP / citizenSpawnCount:n2} GDP per capita";
 	}
 
 	void RefreshTotalMoneyLabel()
@@ -48,24 +65,30 @@ public class GameManager : MonoBehaviour
 		totalMoneyLabel.text = $"{CurrencySymbol}{totalMoney:n2} total";
 	}
 
-	public void RegisterConsumption(float amountSpent)
+	void RefreshAverages()
 	{
-		_totalExpenditures += amountSpent;
-		RefreshGDP();
+		averageTradingPriceLabel.text = $"{CurrencySymbol}{CurrentAverageResBoxTradingPrice:n2} avg. price";
+		averageValuationLabel.text = $"{CurrentAverageResBoxValuation:n3} avg. valuation";
 	}
 
-    // Start is called before the first frame update
-    void Start()
+	void Awake()
+	{
+		_historicalUnitPrices = new List<float>();
+	}
+
+	// Start is called before the first frame update
+	void Start()
     {
 		//_totalExpenditures = citizenSpawnCount * citizenStartingCapital; // the only bit of "government spending" to account into GDP for now
 
-		SpawnCitizens();
+		SpawnInitialCitizens();
 		SpawnResBoxes();
 
 		RefreshGDP();
+		RefreshTotalMoneyLabel();
     }
 
-	void SpawnCitizens()
+	void SpawnInitialCitizens()
 	{
 		_citizens = new List<Citizen>();
 		for (int i = 0; i < citizenSpawnCount; i++)
@@ -73,13 +96,18 @@ public class GameManager : MonoBehaviour
 			Vector3 target = new Vector3(0f, 1f, 0f);
 			target.x = Random.value * fieldRadius * 2 - fieldRadius;
 			target.z = Random.value * fieldRadius * 2 - fieldRadius;
-			var go = Instantiate(citizenPrefab, target, Quaternion.identity);
-			go.name = $"Citizen {i+1}";
-			Citizen citizen = go.GetComponent<Citizen>();
-			citizen.AddMoney(citizenStartingCapital);
-			citizen.GetComponent<Renderer>().material.color = Color.HSVToRGB(1f / citizenSpawnCount * (i + 1), 1f, 1f);
-			_citizens.Add(citizen);
+			SpawnCitizen(target, $"Citizen {i + 1}", Color.HSVToRGB(1f / citizenSpawnCount * (i + 1), 1f, 1f));
 		}
+	}
+
+	void SpawnCitizen(Vector3 pos, string name, Color color)
+	{
+		var go = Instantiate(citizenPrefab, pos, Quaternion.identity);
+		go.name = name;
+		Citizen citizen = go.GetComponent<Citizen>();
+		citizen.GiveStartingCapital(Random.Range(citizenStartingCapitalMin, citizenStartingCapitalMax));
+		citizen.GetComponent<Renderer>().material.color = color;
+		_citizens.Add(citizen);
 	}
 
 	void SpawnResBoxes()
@@ -99,6 +127,18 @@ public class GameManager : MonoBehaviour
 	// Update is called once per frame
 	void Update()
     {
-        
-    }
+        if (Input.GetMouseButtonUp(0))
+		{
+			RaycastHit hit;
+			if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, Camera.main.farClipPlane, ~LayerMask.NameToLayer("Floor")))
+			{
+				Vector3 pos = hit.point;
+				pos.y = 1f;
+				SpawnCitizen(pos, $"Citizen {_citizens.Count + 1} (new)", Color.white);
+			}
+		}
+
+		RefreshTotalMoneyLabel();
+		RefreshAverages();
+	}
 }

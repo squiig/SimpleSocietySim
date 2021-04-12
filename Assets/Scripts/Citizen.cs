@@ -45,6 +45,7 @@ public class Citizen : MonoBehaviour
 
 	[Header("Read-Only")]
 	[SerializeField] float _liquidMoney;
+	[SerializeField] float _startingCapital;
 	[SerializeField] float _maxBuyingPriceMetric;
 	[SerializeField] float _minSellingPriceMetric;
 	//[SerializeField] bool _isDoomed; // meaning they dont have an existing cashflow + dont own assets + cant afford any type of investment right now
@@ -80,7 +81,7 @@ public class Citizen : MonoBehaviour
 
 	public bool AreProfitsIncreasing => ProfitGrowth > 0;
 
-	public float TotalProfits => _liquidMoney - _gameManager.citizenStartingCapital;
+	public float TotalProfits => _liquidMoney - _startingCapital;
 
 	public float ProfitPerSecond => TotalProfits / _totalSeconds;
 
@@ -93,13 +94,18 @@ public class Citizen : MonoBehaviour
 		_liquidMoney += money;
 	}
 
-	public bool TryBuyBox(int amount, float unitOffer, Citizen buyer)
+	public void GiveStartingCapital(float amount)
 	{
-		Debug.Log($"<color=lime><b>{buyer.name}</b> wants to <b>buy {amount} {GameManager.ResBoxSymbol}</b> from <b>{name}</b> for <b>{GameManager.FormatMoney(unitOffer * amount)}</b>...</color>");
+		AddMoney(amount);
+		_startingCapital = amount;
+	}
 
+	public bool TryBuyBox(int startingAmount, float unitOffer, Citizen buyer)
+	{
 		// Considerations
-		float totalPrice;
-		bool isDealSuccessful = TryNegotiateTradeDeal(amount, unitOffer, buyer, out totalPrice);
+		float finalTotalPrice;
+		int finalAmount;
+		bool isDealSuccessful = TryNegotiateTradeDeal(startingAmount, out finalAmount, unitOffer, buyer, out finalTotalPrice);
 
 		if (!isDealSuccessful)
 		{
@@ -108,7 +114,7 @@ public class Citizen : MonoBehaviour
 		}
 
 		// Perform the sale
-		SellResBox(amount, totalPrice, buyer);
+		SellResBox(finalAmount, finalTotalPrice, buyer);
 
 		return true;
 	}
@@ -308,6 +314,21 @@ public class Citizen : MonoBehaviour
 			strategy = BusinessStrategy.GATHERING;
 		}
 
+		// Buying
+		if (CurrentBuyingPriceGoal <= MoneyInWallet)
+		{
+			float buyingCost = CalculateBuyingCost();
+			if (buyingCost <= _liquidMoney && buyingCost < lowestCost)
+			{
+				lowestCost = buyingCost;
+				strategy = BusinessStrategy.BUYING;
+			}
+			else
+			{
+				_investmentPercentage = Mathf.Clamp(_investmentPercentage * 0.9f, 0f, 1f);
+			}
+		}
+
 		// Selling
 		if (totalResBoxesOwned > 0)
 		{
@@ -317,14 +338,10 @@ public class Citizen : MonoBehaviour
 				lowestCost = sellingCost;
 				strategy = BusinessStrategy.SELLING;
 			}
-		}
-
-		// Buying
-		float buyingCost = CalculateBuyingCost();
-		if (buyingCost <= _liquidMoney && buyingCost < lowestCost)
-		{
-			lowestCost = buyingCost;
-			strategy = BusinessStrategy.BUYING;
+			else
+			{
+				_investmentPercentage = Mathf.Clamp(_investmentPercentage * 1.1f, 0f, 1f);
+			}
 		}
 
 		return strategy;
@@ -384,6 +401,9 @@ public class Citizen : MonoBehaviour
 	{
 		_currentBuyingGoalMetric = CurrentBuyingPriceGoal;
 
+		if (CurrentBuyingPriceGoal > MoneyInWallet)
+			return false;
+
 		if (IsFrozen) // shouldnt happen but just in case
 			return false;
 
@@ -422,7 +442,10 @@ public class Citizen : MonoBehaviour
 		Halt(3f);
 
 		float unitOffer = CurrentBuyingPriceGoal;
-		int buyAmount = Mathf.FloorToInt(_liquidMoney * _investmentPercentage / unitOffer);
+		int buyAmount = Mathf.CeilToInt(_liquidMoney * _investmentPercentage / unitOffer);
+
+		Debug.Log($"<color=lime><b>{name}</b> wants to <b>buy {buyAmount} {GameManager.ResBoxSymbol}</b> from <b>{other.name}</b> for <b>{GameManager.FormatMoney(unitOffer * buyAmount)}</b>...</color>");
+
 		bool success = other.TryBuyBox(buyAmount, unitOffer, this);
 
 		if (success)
@@ -443,6 +466,9 @@ public class Citizen : MonoBehaviour
 	bool TrySelling()
 	{
 		_currentSellingGoalMetric = CurrentSellingPriceGoal;
+
+		if (totalResBoxesOwned <= 0)
+			return false;
 
 		if (IsFrozen)
 			return false;
@@ -482,7 +508,7 @@ public class Citizen : MonoBehaviour
 		Halt(3f);
 
 		float unitOffer = CurrentSellingPriceGoal;
-		int sellAmount = Mathf.FloorToInt(totalResBoxesOwned * _investmentPercentage);
+		int sellAmount = Mathf.CeilToInt(totalResBoxesOwned * (1 - _investmentPercentage));
 		bool success = other.TrySellBox(sellAmount, unitOffer, this);
 
 		if (success)
@@ -500,24 +526,32 @@ public class Citizen : MonoBehaviour
 		DestinationReached -= AskToSell;
 	}
 
-	bool TryNegotiateTradeDeal(int amount, float unitOffer, Citizen buyer, out float currentTotalPrice, bool isFinal = false)
+	bool TryNegotiateTradeDeal(int startingAmount, out int finalAmount, float unitOffer, Citizen buyer, out float finalTotalPrice, bool isFinal = false)
 	{
-		currentTotalPrice = float.PositiveInfinity;
+		finalTotalPrice = float.PositiveInfinity;
+		finalAmount = startingAmount;
 
 		/*
 		 * Can the seller even handle this order?
 		 */
-		if (amount <= 0)
+		if (startingAmount <= 0)
 			return false;
 
-		if (amount > totalResBoxesOwned)
+		if (startingAmount > totalResBoxesOwned)
 		{
-			Debug.Log($"{name} can't sell {amount} {GameManager.ResBoxSymbol} to {buyer.name} because the order is <b>too big</b>.");
+			//Debug.Log($"{name} can't sell {amount} {GameManager.ResBoxSymbol} to {buyer.name} because the order is <b>too big</b>.");
 
-			if (totalResBoxesOwned > 0) // Does the seller have any boxes at all?
+			if (totalResBoxesOwned > 1)
 			{
-				Debug.Log("Let's try half the amount.");
-				return TryNegotiateTradeDeal(Mathf.RoundToInt(amount / 2), unitOffer, buyer, out currentTotalPrice);
+				//Debug.Log("Let's try half the amount.");
+				int newAmount = Mathf.RoundToInt(startingAmount / 2);
+				return TryNegotiateTradeDeal(newAmount, out finalAmount, unitOffer, buyer, out finalTotalPrice);
+			}
+
+			if (totalResBoxesOwned == 1) // Does the seller have a box at all?
+			{
+				//Debug.Log("Let's try just ONE box.");
+				return TryNegotiateTradeDeal(1, out finalAmount, unitOffer, buyer, out finalTotalPrice, true);
 			}
 
 			return false;
@@ -528,29 +562,30 @@ public class Citizen : MonoBehaviour
 		 */
 		float fairestUnitPrice = MinimumSellingPrice + ((unitOffer - MinimumSellingPrice) / 2);
 		float initialUnitPrice = unitOffer > fairestUnitPrice ? unitOffer : fairestUnitPrice;
-		float buyerMaxTotalPrice = amount * buyer.MaxBuyingPrice;
-		float sellerMinimumTotalPrice = amount * MinimumSellingPrice;
-		currentTotalPrice = isFinal ? unitOffer : amount * initialUnitPrice;
+		float buyerMaxTotalPrice = startingAmount * buyer.MaxBuyingPrice;
+		float sellerMinimumTotalPrice = startingAmount * MinimumSellingPrice;
+		finalTotalPrice = isFinal ? unitOffer : startingAmount * initialUnitPrice;
 
 		if (isFinal)
-			Debug.Log($"The final offer is <b>{GameManager.FormatMoney(currentTotalPrice)}</b>...");
+			Debug.Log($"The final offer is <b>{GameManager.FormatMoney(finalTotalPrice)}</b>...");
 		else
-			Debug.Log($"The negotation starts at <b>{GameManager.FormatMoney(currentTotalPrice)}</b>...");
+			Debug.Log($"The negotation starts at <b>{GameManager.FormatMoney(finalTotalPrice)}</b>...");
 
 		/*
 		 * If the customer can't afford that, the order amount could be lowered or the seller could try to make a final, minimum offer.
 		 */
-		if (!buyer.CanPay(currentTotalPrice))
+		if (!buyer.CanPay(finalTotalPrice))
 		{
-			Debug.Log($"{buyer.name} <b>can't afford</b> {GameManager.FormatMoney(currentTotalPrice)}...");
+			//Debug.Log($"{buyer.name} <b>can't afford</b> {GameManager.FormatMoney(currentTotalPrice)}...");
 
 			/*
 			 * First, let's try lowering the amount.
 			 */
-			if (amount > 1)
+			if (startingAmount > 1)
 			{
-				Debug.Log("Let's try half the amount.");
-				return TryNegotiateTradeDeal(Mathf.RoundToInt(amount / 2), unitOffer, buyer, out currentTotalPrice);
+				//Debug.Log("Let's try half the amount.");
+				int newAmount = Mathf.RoundToInt(startingAmount / 2);
+				return TryNegotiateTradeDeal(newAmount, out finalAmount, unitOffer, buyer, out finalTotalPrice);
 			}
 
 			/*
@@ -558,42 +593,42 @@ public class Citizen : MonoBehaviour
 			 */
 			float finalOffer = sellerMinimumTotalPrice;
 
-			Debug.Log($"{name} offers a <b>final deal</b> of {amount} {GameManager.ResBoxSymbol} to {buyer.name} for <b>{GameManager.FormatMoney(finalOffer)}</b>...");
+			//Debug.Log($"{name} offers a <b>final deal</b> of {amount} {GameManager.ResBoxSymbol} to {buyer.name} for <b>{GameManager.FormatMoney(finalOffer)}</b>...");
 
 			/*
 			 * If the customer can afford the final offer, that will be the deal.
 			 */
 			if (!buyer.CanPay(finalOffer))
 			{
-				Debug.Log($"{buyer.name} still <b>can't afford</b> it.");
+				//Debug.Log($"{buyer.name} still <b>can't afford</b> it.");
 
 				return false; // Otherwise the order will have to be canceled altogether
 			}
 
-			currentTotalPrice = finalOffer;
+			finalTotalPrice = finalOffer;
 		}
 
 		/*
 		 * After it's determined if the buyer can pay, both will decide if it's worth it to them.
 		 */
-		if (currentTotalPrice > buyerMaxTotalPrice)
+		if (finalTotalPrice > buyerMaxTotalPrice)
 		{
-			Debug.Log($"{buyer.name} <b>won't buy</b> {amount} {GameManager.ResBoxSymbol} from {name} for {GameManager.FormatMoney(currentTotalPrice)} because it's <b>not worth it</b>.");
+			//Debug.Log($"{buyer.name} <b>won't buy</b> {amount} {GameManager.ResBoxSymbol} from {name} for {GameManager.FormatMoney(currentTotalPrice)} because it's <b>not worth it</b>.");
 
 			if (isFinal)
 				return false;
 			else
-				return TryNegotiateTradeDeal(amount, buyerMaxTotalPrice, buyer, out currentTotalPrice, true);
+				return TryNegotiateTradeDeal(startingAmount, out finalAmount, buyerMaxTotalPrice, buyer, out finalTotalPrice, true);
 		}
 
-		if (currentTotalPrice < sellerMinimumTotalPrice)
+		if (finalTotalPrice < sellerMinimumTotalPrice)
 		{
-			Debug.Log($"{name} <b>won't sell</b> {amount} {GameManager.ResBoxSymbol} to {buyer.name} for {GameManager.FormatMoney(currentTotalPrice)} because it's <b>not worth it</b>.");
+			//Debug.Log($"{name} <b>won't sell</b> {amount} {GameManager.ResBoxSymbol} to {buyer.name} for {GameManager.FormatMoney(currentTotalPrice)} because it's <b>not worth it</b>.");
 
 			if (isFinal)
 				return false;
 			else
-				return TryNegotiateTradeDeal(amount, sellerMinimumTotalPrice, buyer, out currentTotalPrice, true);
+				return TryNegotiateTradeDeal(startingAmount, out finalAmount, sellerMinimumTotalPrice, buyer, out finalTotalPrice, true);
 		}
 
 		return true;
@@ -618,13 +653,24 @@ public class Citizen : MonoBehaviour
 
 	float CalculateBuyingCost()
 	{
-		return CalculateCitizenFindingCost() + CurrentBuyingPriceGoal;
+		float citizenFindingCost = CalculateCitizenFindingCost();
+		int buyAmount = Mathf.CeilToInt(MoneyInWallet * _investmentPercentage / CurrentBuyingPriceGoal);
+		float buyingCost = CurrentBuyingPriceGoal * buyAmount;
+		float incentive = TotalProfits / ProfitPerSecond;
+		float totalCost = citizenFindingCost + buyingCost - incentive;
+
+		return Mathf.Max(citizenFindingCost, totalCost);
 	}
 
 	float CalculateSellingCost()
 	{
 		float citizenFindingCost = CalculateCitizenFindingCost();
-		return Mathf.Max(citizenFindingCost, citizenFindingCost + MinimumSellingPrice - TotalProfits / ProfitPerSecond);
+		int sellAmount = Mathf.CeilToInt(totalResBoxesOwned * _investmentPercentage);
+		float sellingCost = MinimumSellingPrice * sellAmount;
+		float incentive = TotalProfits / ProfitPerSecond;
+		float totalCost = citizenFindingCost + sellingCost - incentive;
+
+		return Mathf.Max(citizenFindingCost, totalCost);
 	}
 
 	float CalculateCitizenFindingCost()
@@ -666,6 +712,12 @@ public class Citizen : MonoBehaviour
 
 	void SellResBox(int amount, float totalPrice, Citizen buyer)
 	{
+		if (amount > totalResBoxesOwned)
+		{
+			Debug.LogWarning($"Warning: {name} tried to sell {amount} {GameManager.ResBoxSymbol}, but only has {totalResBoxesOwned} {GameManager.ResBoxSymbol}!");
+			return;
+		}
+
 		// Bookkeeping
 		float profit = totalPrice - MinimumSellingPrice * amount;
 
@@ -673,7 +725,7 @@ public class Citizen : MonoBehaviour
 		_minSellingPriceMetric = MinimumSellingPrice;
 
 		RegisterRevenue(totalPrice, profit);
-		_gameManager.RegisterConsumption(totalPrice);
+		_gameManager.RegisterSale(totalPrice, amount);
 
 		// Transaction
 		totalResBoxesOwned -= amount;
@@ -700,7 +752,7 @@ public class Citizen : MonoBehaviour
 		_latestProfit = profit;
 
 		// Good business makes us care slightly more about unit value, and vice-versa
-		baseResBoxValuation *= 1 + (_profitGrowth / 10);
+		baseResBoxValuation = Mathf.Max(0f, baseResBoxValuation * (1 + (_profitGrowth / 10)));
 
 		RefreshSecondaryLabels();
 	}

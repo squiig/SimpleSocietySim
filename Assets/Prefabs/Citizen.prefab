@@ -264,16 +264,18 @@ MonoBehaviour:
   moneyLabel: {fileID: 8334080152486133519}
   secondLabel: {fileID: 8925566684026345133}
   thirdLabel: {fileID: 7242088365015946206}
-  _speed: 5
+  _speed: 10
   _fieldRadius: 25
   _idlingRadius: 0.5
   IsFrozen: 0
   baseResBoxValuation: 0
   totalResBoxesOwned: 0
-  _opportunityWaitingTime: 2
+  _opportunityWaitingTime: 1
   _minimumProfitExpectation: 0.01
   _startingProfitExpectation: 0.1
+  _investmentPercentage: 0.2
   _liquidMoney: 0
+  _startingCapital: 0
   _maxBuyingPriceMetric: 0
   _minSellingPriceMetric: 0
   _isIdling: 0
