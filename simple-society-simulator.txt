@@ -1,0 +1,41 @@
+
+SIMPLE SOCIETY SIMULATOR
+------------------------
+
+- citizens always and only want to grow their net worth, PROFIT is the core of the game
+
+- citizens have NO INHERENT ASSETS OR TOOLS to drive productivity (like their bodies/energy)
+
+- every non-monetary action symbolically does cost MONEY, instead of energy. TRAVEL, for example.
+
+- citizens get a STARTING CAPITAL to get things going
+
+- citizens have a variety of BUSINESS STRATEGIES:
+
+	- gathering stuff (i.e. base productivity)
+
+	- trading (for which they have to find trading partners themselves)
+
+	- setting up a shop (makes it easier for buyers to find sellers)
+
+	- selling services? (complicated, labor has no inherent value)
+
+
+REMINDERS:
+
+- an ECONOMY is driven by PRODUCTIVITY
+
+- FACTORS of PRODUCTION:
+	1. land / natural resources
+	2. workers/labor
+	3. capital (machines, factories, infrastructure, etc. but also worker knowledge/skills)
+	4. technology (production organizational effectiveness, i.e. how you combine the other factors)
+
+- for now, the productivity in this simulator is the act of GATHERING res boxes
+
+
+IDEAS for later:
+
+- citizens investing in existing shops (e.g. lending, or buying shares)
+- you can GOVERN the economy
+- you can PARTAKE in the economy

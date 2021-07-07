@@ -20,15 +20,20 @@ public class GameManager : MonoBehaviour
 	public float priceMagnifier = 100f;
 	public float travelCostPerMeter = 1f;
 
-	[SerializeField] float _totalExpenditures;
-
+	float _totalExpenditures;
 	List<Citizen> _citizens;
 	List<float> _historicalUnitPrices;
+	float _gdpTimer;
+	[SerializeField] float _gdpPeriod = 10f;
+	float _gdpPerPeriod;
+	float _previousMeasuredGdp;
 
 	/// <summary>
 	/// Represents a real-time snapshot of the total nominal GDP.
 	/// </summary>
 	public float AllTimeNominalGDP => _totalExpenditures;
+
+	public float NominalGDPPerPeriod => _gdpPerPeriod;
 
 	public static string CurrencySymbol => "€"; // ƒ
 
@@ -50,24 +55,23 @@ public class GameManager : MonoBehaviour
 		float unitPrice = amountSpent / amountSold;
 
 		_historicalUnitPrices.Add(unitPrice);
-
-		RefreshGDP();
 	}
 
 	void RefreshGDP()
 	{
-		gdpLabel.text = $"{CurrencySymbol}{AllTimeNominalGDP / citizenSpawnCount:n2} GDP per capita";
+		float gdp = NominalGDPPerPeriod;
+		gdpLabel.text = $"{FormatMoney(gdp == 0 ? 0 : gdp / citizenSpawnCount)} GDP per capita";
 	}
 
 	void RefreshTotalMoneyLabel()
 	{
 		float totalMoney = _citizens.Select(x => x.MoneyInWallet).Sum();
-		totalMoneyLabel.text = $"{CurrencySymbol}{totalMoney:n2} total";
+		totalMoneyLabel.text = $"{FormatMoney(totalMoney)} total";
 	}
 
 	void RefreshAverages()
 	{
-		averageTradingPriceLabel.text = $"{CurrencySymbol}{CurrentAverageResBoxTradingPrice:n2} avg. price";
+		averageTradingPriceLabel.text = $"{FormatMoney(CurrentAverageResBoxTradingPrice)} avg. price";
 		averageValuationLabel.text = $"{CurrentAverageResBoxValuation:n3} avg. valuation";
 	}
 
@@ -124,6 +128,19 @@ public class GameManager : MonoBehaviour
 		}
 	}
 
+	void UpdateGDPPerPeriod()
+	{
+		_gdpTimer += Time.deltaTime;
+		if (_gdpTimer >= _gdpPeriod)
+		{
+			_gdpTimer = 0;
+			_gdpPerPeriod = AllTimeNominalGDP - _previousMeasuredGdp;
+			_previousMeasuredGdp = AllTimeNominalGDP;
+
+			RefreshGDP();
+		}
+	}
+
 	// Update is called once per frame
 	void Update()
     {
@@ -137,6 +154,8 @@ public class GameManager : MonoBehaviour
 				SpawnCitizen(pos, $"Citizen {_citizens.Count + 1} (new)", Color.white);
 			}
 		}
+
+		UpdateGDPPerPeriod();
 
 		RefreshTotalMoneyLabel();
 		RefreshAverages();

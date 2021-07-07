@@ -39,6 +39,7 @@ public class Citizen : MonoBehaviour
 	public int totalResBoxesOwned; // the primary asset that can be found or bought and used as merchandise
 
 	[SerializeField] float _opportunityWaitingTime = 2f;
+	[SerializeField] float _badTradePartnerBanTime = 10f;
 	[SerializeField] float _minimumProfitExpectation = 0.01f;
 	[SerializeField] float _startingProfitExpectation = 0.1f;
 	[SerializeField] float _investmentPercentage = 0.2f;
@@ -531,6 +532,8 @@ public class Citizen : MonoBehaviour
 		finalTotalPrice = float.PositiveInfinity;
 		finalAmount = startingAmount;
 
+		string logString = "";
+
 		/*
 		 * Can the seller even handle this order?
 		 */
@@ -539,21 +542,22 @@ public class Citizen : MonoBehaviour
 
 		if (startingAmount > totalResBoxesOwned)
 		{
-			//Debug.Log($"{name} can't sell {amount} {GameManager.ResBoxSymbol} to {buyer.name} because the order is <b>too big</b>.");
+			logString += $"\n{name} can't sell {startingAmount} {GameManager.ResBoxSymbol} to {buyer.name} because the order is <b>too big</b>.";
 
 			if (totalResBoxesOwned > 1)
 			{
-				//Debug.Log("Let's try half the amount.");
+				logString += "\nLet's try half the amount.";
 				int newAmount = Mathf.RoundToInt(startingAmount / 2);
 				return TryNegotiateTradeDeal(newAmount, out finalAmount, unitOffer, buyer, out finalTotalPrice);
 			}
 
 			if (totalResBoxesOwned == 1) // Does the seller have a box at all?
 			{
-				//Debug.Log("Let's try just ONE box.");
+				logString += "\nLet's try just ONE box.";
 				return TryNegotiateTradeDeal(1, out finalAmount, unitOffer, buyer, out finalTotalPrice, true);
 			}
 
+			Debug.Log(logString);
 			return false;
 		}
 
@@ -567,23 +571,23 @@ public class Citizen : MonoBehaviour
 		finalTotalPrice = isFinal ? unitOffer : startingAmount * initialUnitPrice;
 
 		if (isFinal)
-			Debug.Log($"The final offer is <b>{GameManager.FormatMoney(finalTotalPrice)}</b>...");
+			logString += $"\nThe final offer is <b>{GameManager.FormatMoney(finalTotalPrice)}</b>...";
 		else
-			Debug.Log($"The negotation starts at <b>{GameManager.FormatMoney(finalTotalPrice)}</b>...");
+			logString += $"\nThe negotation starts at <b>{GameManager.FormatMoney(finalTotalPrice)}</b>...";
 
 		/*
 		 * If the customer can't afford that, the order amount could be lowered or the seller could try to make a final, minimum offer.
 		 */
 		if (!buyer.CanPay(finalTotalPrice))
 		{
-			//Debug.Log($"{buyer.name} <b>can't afford</b> {GameManager.FormatMoney(currentTotalPrice)}...");
+			logString += $"\n{buyer.name} <b>can't afford</b> {GameManager.FormatMoney(finalTotalPrice)}...";
 
 			/*
 			 * First, let's try lowering the amount.
 			 */
 			if (startingAmount > 1)
 			{
-				//Debug.Log("Let's try half the amount.");
+				logString += "\nLet's try half the amount.";
 				int newAmount = Mathf.RoundToInt(startingAmount / 2);
 				return TryNegotiateTradeDeal(newAmount, out finalAmount, unitOffer, buyer, out finalTotalPrice);
 			}
@@ -593,15 +597,16 @@ public class Citizen : MonoBehaviour
 			 */
 			float finalOffer = sellerMinimumTotalPrice;
 
-			//Debug.Log($"{name} offers a <b>final deal</b> of {amount} {GameManager.ResBoxSymbol} to {buyer.name} for <b>{GameManager.FormatMoney(finalOffer)}</b>...");
+			logString += $"\n{name} offers a <b>final deal</b> of {finalAmount} {GameManager.ResBoxSymbol} to {buyer.name} for <b>{GameManager.FormatMoney(finalOffer)}</b>...";
 
 			/*
 			 * If the customer can afford the final offer, that will be the deal.
 			 */
 			if (!buyer.CanPay(finalOffer))
 			{
-				//Debug.Log($"{buyer.name} still <b>can't afford</b> it.");
+				logString += $"\n{buyer.name} still <b>can't afford</b> it.";
 
+				Debug.Log(logString);
 				return false; // Otherwise the order will have to be canceled altogether
 			}
 
@@ -613,24 +618,29 @@ public class Citizen : MonoBehaviour
 		 */
 		if (finalTotalPrice > buyerMaxTotalPrice)
 		{
-			//Debug.Log($"{buyer.name} <b>won't buy</b> {amount} {GameManager.ResBoxSymbol} from {name} for {GameManager.FormatMoney(currentTotalPrice)} because it's <b>not worth it</b>.");
+			logString += $"\n{buyer.name} <b>won't buy</b> {finalAmount} {GameManager.ResBoxSymbol} from {name} for {GameManager.FormatMoney(finalTotalPrice)} because it's <b>not worth it</b>.";
 
 			if (isFinal)
+			{
+				Debug.Log(logString);
 				return false;
-			else
-				return TryNegotiateTradeDeal(startingAmount, out finalAmount, buyerMaxTotalPrice, buyer, out finalTotalPrice, true);
+			}
+			else return TryNegotiateTradeDeal(startingAmount, out finalAmount, buyerMaxTotalPrice, buyer, out finalTotalPrice, true);
 		}
 
 		if (finalTotalPrice < sellerMinimumTotalPrice)
 		{
-			//Debug.Log($"{name} <b>won't sell</b> {amount} {GameManager.ResBoxSymbol} to {buyer.name} for {GameManager.FormatMoney(currentTotalPrice)} because it's <b>not worth it</b>.");
+			logString += $"\n{name} <b>won't sell</b> {finalAmount} {GameManager.ResBoxSymbol} to {buyer.name} for {GameManager.FormatMoney(finalTotalPrice)} because it's <b>not worth it</b>.";
 
 			if (isFinal)
+			{
+				Debug.Log(logString);
 				return false;
-			else
-				return TryNegotiateTradeDeal(startingAmount, out finalAmount, sellerMinimumTotalPrice, buyer, out finalTotalPrice, true);
+			}
+			else return TryNegotiateTradeDeal(startingAmount, out finalAmount, sellerMinimumTotalPrice, buyer, out finalTotalPrice, true);
 		}
 
+		Debug.Log(logString);
 		return true;
 	}
 

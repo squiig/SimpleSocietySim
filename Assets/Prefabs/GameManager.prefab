@@ -49,11 +49,13 @@ MonoBehaviour:
     type: 3}
   gdpLabel: {fileID: 0}
   totalMoneyLabel: {fileID: 0}
+  averageValuationLabel: {fileID: 0}
+  averageTradingPriceLabel: {fileID: 0}
   fieldRadius: 25
-  citizenSpawnCount: 3
-  resBoxSpawnCount: 80
+  citizenSpawnCount: 30
+  resBoxSpawnCount: 100
   citizenStartingCapitalMin: 10
-  citizenStartingCapitalMax: 100
+  citizenStartingCapitalMax: 1000
   priceMagnifier: 100
   travelCostPerMeter: 0.1
-  _totalExpenditures: 0
+  _gdpPeriod: 5
