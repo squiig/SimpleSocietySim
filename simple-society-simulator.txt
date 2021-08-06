@@ -39,3 +39,5 @@ IDEAS for later:
 - citizens investing in existing shops (e.g. lending, or buying shares)
 - you can GOVERN the economy
 - you can PARTAKE in the economy
+- citizens being able to own and trade land
+

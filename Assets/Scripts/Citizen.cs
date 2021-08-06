@@ -35,35 +35,47 @@ public class Citizen : MonoBehaviour
 	public bool IsFrozen;
 
 	[Header("Interesting Stuff")]
-	public float baseResBoxValuation; // starts out random, but can fluctuate by effect of profit margins
-	public int totalResBoxesOwned; // the primary asset that can be found or bought and used as merchandise
+	[Tooltip("Starts out random between 0 and 1, but can fluctuate by effect of profit margins.")]
+	public float baseResBoxValuation;
 
+	[Tooltip("The primary asset that can be found or traded as merchandise.")]
+	public int totalResBoxesOwned;
+
+	[Tooltip("The amount of seconds to wait before deciding on the next action.")]
 	[SerializeField] float _opportunityWaitingTime = 2f;
+
+	[Tooltip("The amount of seconds to wait before trying to trade again with the last trade partner that failed to strike a deal.")]
 	[SerializeField] float _badTradePartnerBanTime = 10f;
+
+	[Tooltip("The citizen won't accept a profit margin lower than this decimal fraction.")]
 	[SerializeField] float _minimumProfitExpectation = 0.01f;
+
+	[Tooltip("The profit margin (in decimal fraction) the citizen will open with at its first trading negotiation.")]
 	[SerializeField] float _startingProfitExpectation = 0.1f;
-	[SerializeField] float _investmentPercentage = 0.2f;
+
+	[Tooltip("The decimal fraction of this citizen's total worth ")]
+	[SerializeField] float _tradeInvestmentFraction = 0.2f;
 
 	[Header("Read-Only")]
-	[SerializeField] float _liquidMoney;
-	[SerializeField] float _startingCapital;
-	[SerializeField] float _maxBuyingPriceMetric;
-	[SerializeField] float _minSellingPriceMetric;
-	//[SerializeField] bool _isDoomed; // meaning they dont have an existing cashflow + dont own assets + cant afford any type of investment right now
-	[SerializeField] bool _isIdling; // just for aesthetic effect, doesn't cost money
-	[SerializeField] BusinessStrategy _currentStrategy;
-	//[SerializeField] bool _wantsToTrade;
-	[SerializeField] int _totalResBoxesGathered;
-	[SerializeField] float _totalGatheringTravelCosts;
-	[SerializeField] float _latestProfit;
-	[SerializeField] float _latestProfitMargin;
-	[SerializeField] float _profitGrowth;
-	[SerializeField] float _currentProfitExpectation;
-	[SerializeField] float _currentBuyingGoalMetric;
-	[SerializeField] float _currentSellingGoalMetric;
-	[SerializeField] Citizen _lastFailedTradePartner;
+	[SerializeField, ReadOnly] float _moneyInWallet;
+	[SerializeField, ReadOnly] float _startingCapital;
+	[SerializeField, ReadOnly] float _maxBuyingPriceMetric;
+	[SerializeField, ReadOnly] float _minSellingPriceMetric;
+	//[SerializeField, ReadOnly] bool _isDoomed; // meaning they dont have an existing cashflow + dont own assets + cant afford any type of investment right now
+	[SerializeField, ReadOnly] bool _isIdling; // just for aesthetic effect, doesn't cost money
+	[SerializeField, ReadOnly] BusinessStrategy _currentStrategy;
+	//[SerializeField, ReadOnly] bool _wantsToTrade;
+	[SerializeField, ReadOnly] int _totalResBoxesGathered;
+	[SerializeField, ReadOnly] float _totalGatheringTravelCosts;
+	[SerializeField, ReadOnly] float _latestProfit;
+	[SerializeField, ReadOnly] float _latestProfitMargin;
+	[SerializeField, ReadOnly] float _profitGrowth;
+	[SerializeField, ReadOnly] float _currentProfitExpectation;
+	[SerializeField, ReadOnly] float _currentBuyingGoalMetric;
+	[SerializeField, ReadOnly] float _currentSellingGoalMetric;
+	[SerializeField, ReadOnly] Citizen _lastFailedTradePartner;
 
-	public float MoneyInWallet => _liquidMoney;
+	public float MoneyInWallet => _moneyInWallet;
 
 	public float AverageResBoxAcquisitionCost => _totalGatheringTravelCosts / _totalResBoxesGathered;
 
@@ -82,7 +94,7 @@ public class Citizen : MonoBehaviour
 
 	public bool AreProfitsIncreasing => ProfitGrowth > 0;
 
-	public float TotalProfits => _liquidMoney - _startingCapital;
+	public float TotalProfits => MoneyInWallet - _startingCapital;
 
 	public float ProfitPerSecond => TotalProfits / _totalSeconds;
 
@@ -92,7 +104,7 @@ public class Citizen : MonoBehaviour
 
 	public void AddMoney(float money)
 	{
-		_liquidMoney += money;
+		_moneyInWallet += money;
 	}
 
 	public void GiveStartingCapital(float amount)
@@ -129,7 +141,7 @@ public class Citizen : MonoBehaviour
 
 	public bool CanPay(float price)
 	{
-		return price <= _liquidMoney;
+		return price <= MoneyInWallet;
 	}
 
 	public bool TryAskForAttention()
@@ -245,7 +257,7 @@ public class Citizen : MonoBehaviour
 		{
 			float stepDist = Vector3.Distance(transform.position, nextStep);
 			float travelCosts = stepDist * _gameManager.travelCostPerMeter;
-			bool canAffordStep = travelCosts <= _liquidMoney;
+			bool canAffordStep = travelCosts <= MoneyInWallet;
 
 			if (!canAffordStep)
 				return;
@@ -309,7 +321,7 @@ public class Citizen : MonoBehaviour
 
 		// Gathering
 		float gatheringCost = CalculateGatheringCost();
-		if (gatheringCost <= _liquidMoney && gatheringCost < lowestCost)
+		if (gatheringCost <= MoneyInWallet && gatheringCost < lowestCost)
 		{
 			lowestCost = gatheringCost;
 			strategy = BusinessStrategy.GATHERING;
@@ -319,14 +331,14 @@ public class Citizen : MonoBehaviour
 		if (CurrentBuyingPriceGoal <= MoneyInWallet)
 		{
 			float buyingCost = CalculateBuyingCost();
-			if (buyingCost <= _liquidMoney && buyingCost < lowestCost)
+			if (buyingCost <= MoneyInWallet && buyingCost < lowestCost)
 			{
 				lowestCost = buyingCost;
 				strategy = BusinessStrategy.BUYING;
 			}
 			else
 			{
-				_investmentPercentage = Mathf.Clamp(_investmentPercentage * 0.9f, 0f, 1f);
+				_tradeInvestmentFraction = Mathf.Clamp(_tradeInvestmentFraction * 0.9f, 0f, 1f);
 			}
 		}
 
@@ -334,14 +346,14 @@ public class Citizen : MonoBehaviour
 		if (totalResBoxesOwned > 0)
 		{
 			float sellingCost = CalculateSellingCost();
-			if (sellingCost <= _liquidMoney && sellingCost < lowestCost)
+			if (sellingCost <= MoneyInWallet && sellingCost < lowestCost)
 			{
 				lowestCost = sellingCost;
 				strategy = BusinessStrategy.SELLING;
 			}
 			else
 			{
-				_investmentPercentage = Mathf.Clamp(_investmentPercentage * 1.1f, 0f, 1f);
+				_tradeInvestmentFraction = Mathf.Clamp(_tradeInvestmentFraction * 1.1f, 0f, 1f);
 			}
 		}
 
@@ -443,7 +455,7 @@ public class Citizen : MonoBehaviour
 		Halt(3f);
 
 		float unitOffer = CurrentBuyingPriceGoal;
-		int buyAmount = Mathf.CeilToInt(_liquidMoney * _investmentPercentage / unitOffer);
+		int buyAmount = Mathf.CeilToInt(MoneyInWallet * _tradeInvestmentFraction / unitOffer);
 
 		Debug.Log($"<color=lime><b>{name}</b> wants to <b>buy {buyAmount} {GameManager.ResBoxSymbol}</b> from <b>{other.name}</b> for <b>{GameManager.FormatMoney(unitOffer * buyAmount)}</b>...</color>");
 
@@ -509,7 +521,7 @@ public class Citizen : MonoBehaviour
 		Halt(3f);
 
 		float unitOffer = CurrentSellingPriceGoal;
-		int sellAmount = Mathf.CeilToInt(totalResBoxesOwned * (1 - _investmentPercentage));
+		int sellAmount = Mathf.CeilToInt(totalResBoxesOwned * (1 - _tradeInvestmentFraction));
 		bool success = other.TrySellBox(sellAmount, unitOffer, this);
 
 		if (success)
@@ -664,7 +676,7 @@ public class Citizen : MonoBehaviour
 	float CalculateBuyingCost()
 	{
 		float citizenFindingCost = CalculateCitizenFindingCost();
-		int buyAmount = Mathf.CeilToInt(MoneyInWallet * _investmentPercentage / CurrentBuyingPriceGoal);
+		int buyAmount = Mathf.CeilToInt(MoneyInWallet * _tradeInvestmentFraction / CurrentBuyingPriceGoal);
 		float buyingCost = CurrentBuyingPriceGoal * buyAmount;
 		float incentive = TotalProfits / ProfitPerSecond;
 		float totalCost = citizenFindingCost + buyingCost - incentive;
@@ -675,7 +687,7 @@ public class Citizen : MonoBehaviour
 	float CalculateSellingCost()
 	{
 		float citizenFindingCost = CalculateCitizenFindingCost();
-		int sellAmount = Mathf.CeilToInt(totalResBoxesOwned * _investmentPercentage);
+		int sellAmount = Mathf.CeilToInt(totalResBoxesOwned * _tradeInvestmentFraction);
 		float sellingCost = MinimumSellingPrice * sellAmount;
 		float incentive = TotalProfits / ProfitPerSecond;
 		float totalCost = citizenFindingCost + sellingCost - incentive;
@@ -781,7 +793,7 @@ public class Citizen : MonoBehaviour
 
 	void RefreshMoneyLabel()
 	{
-		moneyLabel.text = $"{GameManager.FormatMoney(_liquidMoney)}";
+		moneyLabel.text = $"{GameManager.FormatMoney(MoneyInWallet)}";
 	}
 
 	void RefreshSecondaryLabels()
