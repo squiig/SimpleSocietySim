@@ -189,6 +189,7 @@ MeshRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
@@ -261,21 +262,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38ceeba1ed43866449218cb0131b63de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moneyLabel: {fileID: 8334080152486133519}
-  secondLabel: {fileID: 8925566684026345133}
-  thirdLabel: {fileID: 7242088365015946206}
+  _moneyLabel: {fileID: 8334080152486133519}
+  _secondLabel: {fileID: 8925566684026345133}
+  _thirdLabel: {fileID: 7242088365015946206}
   _speed: 10
   _fieldRadius: 25
   _idlingRadius: 0.5
-  IsFrozen: 0
-  baseResBoxValuation: 0
-  totalResBoxesOwned: 0
+  _baseResBoxValuation: 0
+  _totalResBoxesOwned: 0
   _opportunityWaitingTime: 1
   _minimumProfitExpectation: 0.01
   _startingProfitExpectation: 0.1
-  _investmentPercentage: 0.2
-  _liquidMoney: 0
-  _startingCapital: 0
+  _tradeInvestmentFraction: 0.2
+  _moneyInWallet: 0
+  _startingMoney: 0
   _maxBuyingPriceMetric: 0
   _minSellingPriceMetric: 0
   _isIdling: 0

@@ -136,7 +136,7 @@ GameObject:
   - component: {fileID: 337772094}
   - component: {fileID: 337772093}
   m_Layer: 5
-  m_Name: GDP text
+  m_Name: GDP label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -361,6 +361,49 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &668878878
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 668878880}
+  - component: {fileID: 668878879}
+  m_Layer: 0
+  m_Name: TradeManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &668878879
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 668878878}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b32e87009c44f194ba4ac4cbb850e301, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &668878880
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 668878878}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -549,7 +592,7 @@ GameObject:
   - component: {fileID: 1091514986}
   - component: {fileID: 1091514985}
   m_Layer: 5
-  m_Name: Total money text
+  m_Name: Total money label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1140,12 +1183,49 @@ PrefabInstance:
       objectReference: {fileID: 337772093}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
+      propertyPath: _gdpLabel
+      value: 
+      objectReference: {fileID: 337772093}
+    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
+        type: 3}
+      propertyPath: _resBoxPrefab
+      value: 
+      objectReference: {fileID: 3616936836437254824, guid: fd47f309ecf9c5646b7fd1d37eb946cd,
+        type: 3}
+    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
+        type: 3}
+      propertyPath: _citizenPrefab
+      value: 
+      objectReference: {fileID: 891022432897842971, guid: d99372851223ccb4db92f25c4adb228f,
+        type: 3}
+    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
+        type: 3}
       propertyPath: totalMoneyLabel
       value: 
       objectReference: {fileID: 1091514985}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
+      propertyPath: _totalMoneyLabel
+      value: 
+      objectReference: {fileID: 1091514985}
+    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
+        type: 3}
+      propertyPath: citizenSpawnCount
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
+        type: 3}
+      propertyPath: _citizenSpawnCount
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
+        type: 3}
       propertyPath: averageValuationLabel
+      value: 
+      objectReference: {fileID: 1411191307}
+    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
+        type: 3}
+      propertyPath: _averageValuationLabel
       value: 
       objectReference: {fileID: 1411191307}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
@@ -1156,6 +1236,11 @@ PrefabInstance:
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
       propertyPath: averageTradingPriceLabel
+      value: 
+      objectReference: {fileID: 1502697304}
+    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
+        type: 3}
+      propertyPath: _averageTradingPriceLabel
       value: 
       objectReference: {fileID: 1502697304}
     m_RemovedComponents: []
