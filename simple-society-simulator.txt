@@ -26,14 +26,16 @@ REMINDERS:
 - an ECONOMY is driven by PRODUCTIVITY
 
 - FACTORS of PRODUCTION:
-	1. land / natural resources (free gifts of nature)
-	2. workers/labor
-	3. capital (man-made things that help in the production of goods and services: machines, factories, infrastructure, etc. but also worker knowledge/skills)
+	1. land (which includes natural resources)
+	2. labor (workers)
+	3. capital (man-made things that help in the production of goods and services: machines, factories, infrastructure, etc. but also worker knowledge/skills which is called human capital)
 	4. technology (production organizational effectiveness, i.e. how you combine the other factors)
 
 - for now, the productivity in this simulator is the act of GATHERING res boxes (so, natural resources) 
 
-- an ECONOMY grows through economic freedom and an icrease of PRODUCTIVITY
+- an ECONOMY grows through economic freedom and an increase of PRODUCTIVITY
+
+- the VELOCITY OF MONEY is the number of times money is spent per year
 
 IDEAS for later:
 
