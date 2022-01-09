@@ -11,7 +11,7 @@ public class GameManager : MonoBehaviour
 	/// </summary>
 	public float AllTimeNominalGDP => _totalExpenditures;
 
-	public float NominalGDPPerPeriod => _gdpPerPeriod;
+	public float PeriodicalNominalGDP => _gdpPerPeriod;
 
 	public static string CurrencySymbol => "€"; // ƒ
 
@@ -25,16 +25,15 @@ public class GameManager : MonoBehaviour
 
 	public float TravelCostPerMeter => _travelCostPerMeter;
 
-	[Header("Boring Stuff")]
 	[SerializeField] private GameObject _resBoxPrefab;
 	[SerializeField] private GameObject _citizenPrefab;
 	[SerializeField] private TMP_Text _gdpLabel;
 	[SerializeField] private TMP_Text _totalMoneyLabel;
 	[SerializeField] private TMP_Text _averageValuationLabel;
 	[SerializeField] private TMP_Text _averageTradingPriceLabel;
-	[SerializeField] private float _fieldRadius = 25f;
 
-	[Header("Interesting Stuff")]
+	[Header("Settings")]
+	[SerializeField] private float _fieldRadius = 25f;
 	[SerializeField] private int _citizenSpawnCount = 3;
 	[SerializeField] private int _resBoxSpawnCount = 80;
 	[SerializeField] private float _citizenStartingMoneyMin = 10f;
@@ -43,14 +42,15 @@ public class GameManager : MonoBehaviour
 	[SerializeField] private int _citizenMaxStartingResBoxes = 10;
 	[SerializeField] private float _priceMagnifier = 100f;
 	[SerializeField] private float _travelCostPerMeter = 1f;
-	[SerializeField] private float _gdpPeriodInSeconds = 5f;
 
-	[Header("Read-Only")]
+	[Header("Metrics")]
 	[SerializeField, ReadOnly] private int _totalResBoxesInMarket;
 	[SerializeField, ReadOnly] private float _totalExpenditures;
 	[SerializeField, ReadOnly] private float _gdpTimer;
+	[SerializeField] private float _gdpPeriodInSeconds = 5f;
 	[SerializeField, ReadOnly] private float _gdpPerPeriod;
 	[SerializeField, ReadOnly] private float _previousMeasuredGdp;
+	[SerializeField] private RunChart _gdpChart;
 
 	private List<Citizen> _citizens;
 	private List<float> _historicalUnitPrices;
@@ -80,16 +80,21 @@ public class GameManager : MonoBehaviour
 		//_totalExpenditures = citizenSpawnCount * citizenStartingCapital; // the only bit of "government spending" to account into GDP for now
 		_totalResBoxesInMarket = _resBoxSpawnCount;
 
+		_gdpChart.ConfigureXAxis(1, 1);
+
 		SpawnInitialCitizens();
 		SpawnResBoxes();
 
-		RefreshGDP();
+		RefreshGDPMetrics();
 		RefreshTotalMoneyLabel();
 	}
 
-	void RefreshGDP()
+	/// <summary>
+	/// Updates GDP related GUIs.
+	/// </summary>
+	void RefreshGDPMetrics()
 	{
-		float gdp = NominalGDPPerPeriod;
+		float gdp = PeriodicalNominalGDP;
 		_gdpLabel.text = $"{FormatMoney(gdp == 0 ? 0 : gdp / _citizenSpawnCount)} GDP per capita";
 	}
 
@@ -144,7 +149,7 @@ public class GameManager : MonoBehaviour
 		}
 	}
 
-	void UpdateGDPPerPeriod()
+	void UpdateGDPMetrics()
 	{
 		_gdpTimer += Time.deltaTime;
 		if (_gdpTimer >= _gdpPeriodInSeconds)
@@ -153,13 +158,15 @@ public class GameManager : MonoBehaviour
 			_gdpPerPeriod = AllTimeNominalGDP - _previousMeasuredGdp;
 			_previousMeasuredGdp = AllTimeNominalGDP;
 
-			RefreshGDP();
+			// Chart stuff
+			_gdpChart.AddValue(_gdpPerPeriod);
+
+			RefreshGDPMetrics();
 		}
 	}
 
-	// Update is called once per frame
-	void Update()
-    {
+	void ListenForSpawnInput()
+	{
         if (Input.GetMouseButtonUp(0))
 		{
 			RaycastHit hit;
@@ -170,8 +177,14 @@ public class GameManager : MonoBehaviour
 				SpawnCitizen(pos, $"Citizen {_citizens.Count + 1} (new)", Color.white);
 			}
 		}
+	}
 
-		UpdateGDPPerPeriod();
+	// Update is called once per frame
+	void Update()
+    {
+		ListenForSpawnInput();
+
+		UpdateGDPMetrics();
 
 		RefreshTotalMoneyLabel();
 		RefreshAverages();
