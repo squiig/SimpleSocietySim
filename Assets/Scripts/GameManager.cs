@@ -81,6 +81,7 @@ public class GameManager : MonoBehaviour
 		_totalResBoxesInMarket = _resBoxSpawnCount;
 
 		_gdpChart.ConfigureXAxis(1, 1);
+		_gdpChart.ConfigureYAxis(0, 100);
 
 		SpawnInitialCitizens();
 		SpawnResBoxes();
@@ -158,10 +159,12 @@ public class GameManager : MonoBehaviour
 			_gdpPerPeriod = AllTimeNominalGDP - _previousMeasuredGdp;
 			_previousMeasuredGdp = AllTimeNominalGDP;
 
-			// Chart stuff
-			_gdpChart.AddValue(_gdpPerPeriod);
-
 			RefreshGDPMetrics();
+
+			// Chart stuff
+			float val = _gdpPerPeriod / _citizenSpawnCount;
+			_gdpChart.AddValue(val);
+			Debug.LogWarning(val);
 		}
 	}
 

@@ -731,7 +731,7 @@ PrefabInstance:
     - target: {fileID: 4862735620815481711, guid: 14e19cc2cb6f62440b44f2c600e1c245,
         type: 3}
       propertyPath: _title
-      value: GDP p/c/p/p
+      value: GDP p/c/p/period
       objectReference: {fileID: 0}
     - target: {fileID: 8933934701269387177, guid: 14e19cc2cb6f62440b44f2c600e1c245,
         type: 3}
@@ -1368,13 +1368,18 @@ PrefabInstance:
       objectReference: {fileID: 1091514985}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
+      propertyPath: _resBoxSpawnCount
+      value: 100
+      objectReference: {fileID: 0}
+    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
+        type: 3}
       propertyPath: citizenSpawnCount
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
       propertyPath: _citizenSpawnCount
-      value: 10
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
