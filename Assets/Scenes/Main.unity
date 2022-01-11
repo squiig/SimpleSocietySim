@@ -494,14 +494,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 705507993}
-  m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
+  m_LocalRotation: {x: 0.29069713, y: -0.6578478, z: 0.30675945, w: 0.62340206}
   m_LocalPosition: {x: 0, y: 3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+  m_LocalEulerAnglesHint: {x: 50, y: -93.08, z: 0}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -578,14 +578,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: 0.40034905, y: 0, z: 0, w: 0.91636276}
-  m_LocalPosition: {x: 0, y: 24.64, z: -38.9}
+  m_LocalRotation: {x: 0.40585947, y: 0, z: 0, w: 0.9139355}
+  m_LocalPosition: {x: 0, y: 29.8, z: -41.379}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 47.2, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 47.89, y: 0, z: 0}
 --- !u!1 &1091514983
 GameObject:
   m_ObjectHideFlags: 0
@@ -1369,7 +1369,7 @@ PrefabInstance:
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
       propertyPath: _resBoxSpawnCount
-      value: 100
+      value: 500
       objectReference: {fileID: 0}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
@@ -1380,6 +1380,11 @@ PrefabInstance:
         type: 3}
       propertyPath: _citizenSpawnCount
       value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
+        type: 3}
+      propertyPath: _gdpPeriodInSeconds
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
@@ -1398,6 +1403,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
+      propertyPath: _citizenStartingMoneyMax
+      value: 1000
+      objectReference: {fileID: 0}
+    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
+        type: 3}
       propertyPath: averageTradingPriceLabel
       value: 
       objectReference: {fileID: 1502697304}
@@ -1406,6 +1416,11 @@ PrefabInstance:
       propertyPath: _averageTradingPriceLabel
       value: 
       objectReference: {fileID: 1502697304}
+    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
+        type: 3}
+      propertyPath: _citizenMaxStartingResBoxes
+      value: 100
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a1adf4d8ecc0ad148860229ee8b4e93d, type: 3}
 --- !u!1001 &4966633335228986455
