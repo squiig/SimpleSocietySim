@@ -1765,13 +1765,18 @@ PrefabInstance:
       objectReference: {fileID: 1091514985}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
+      propertyPath: _resBoxSpawnCount
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
+        type: 3}
       propertyPath: citizenSpawnCount
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
       propertyPath: _citizenSpawnCount
-      value: 20
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}

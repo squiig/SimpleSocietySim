@@ -192,7 +192,7 @@ public class RunChart : MonoBehaviour
 		// Markers
 		int newHighestYMarker = (int)((Mathf.RoundToInt(HighestValue / _yMarkerInterval) + (int)Mathf.Sign(HighestValue)) * _yMarkerInterval);
 
-		if (newHighestYMarker > 10)
+		if (newHighestYMarker > 1)
 		{
 			int i = (int)Mathf.Pow(10, Mathf.FloorToInt(Mathf.Log10(newHighestYMarker)));
 			newHighestYMarker = newHighestYMarker - (newHighestYMarker % i) + i;
