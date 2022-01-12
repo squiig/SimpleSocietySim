@@ -17,7 +17,7 @@ public class GameManager : MonoBehaviour
 
 	public static string ResBoxSymbol => "BOX";
 
-	public float CurrentAverageResBoxTradingPrice => _historicalUnitPrices.Sum() / _historicalUnitPrices.Count;
+	public float CurrentAverageResBoxTradingPrice => _historicalUnitPrices.Count == 0 ? 0f : _historicalUnitPrices.Sum() / _historicalUnitPrices.Count;
 
 	public float CurrentAverageResBoxValuation => _citizens.Select(x => x.BaseResBoxValuation).Sum() / _citizens.Count;
 
@@ -46,11 +46,17 @@ public class GameManager : MonoBehaviour
 	[Header("Metrics")]
 	[SerializeField, ReadOnly] private int _totalResBoxesInMarket;
 	[SerializeField, ReadOnly] private float _totalExpenditures;
+	[Space]
 	[SerializeField, ReadOnly] private float _gdpTimer;
 	[SerializeField] private float _gdpPeriodInSeconds = 5f;
 	[SerializeField, ReadOnly] private float _gdpPerPeriod;
 	[SerializeField, ReadOnly] private float _previousMeasuredGdp;
-	[SerializeField] private RunChart _gdpChart;
+	[SerializeField] private RunChart _totalGdpPerPeriodChart;
+	[SerializeField] private RunChart _allTimeGdpChart;
+	[Space]
+	[SerializeField, ReadOnly] private float _boxMetricsTimer;
+	[SerializeField] private float _boxMetricsPeriodInSeconds = 5f;
+	[SerializeField] private RunChart _avgResBoxTradingPriceChart;
 
 	private List<Citizen> _citizens;
 	private List<float> _historicalUnitPrices;
@@ -80,9 +86,6 @@ public class GameManager : MonoBehaviour
 		//_totalExpenditures = citizenSpawnCount * citizenStartingCapital; // the only bit of "government spending" to account into GDP for now
 		_totalResBoxesInMarket = _resBoxSpawnCount;
 
-		_gdpChart.ConfigureXAxis(1, 1);
-		_gdpChart.ConfigureYAxis(0, 100);
-
 		SpawnInitialCitizens();
 		SpawnResBoxes();
 
@@ -96,7 +99,7 @@ public class GameManager : MonoBehaviour
 	void RefreshGDPMetrics()
 	{
 		float gdp = PeriodicalNominalGDP;
-		_gdpLabel.text = $"{FormatMoney(gdp == 0 ? 0 : gdp / _citizenSpawnCount)} GDP per capita";
+		_gdpLabel.text = $"{FormatMoney(gdp == 0 ? 0 : gdp / _citizenSpawnCount)} avg. GDP p/c/p/p";
 	}
 
 	void RefreshTotalMoneyLabel()
@@ -136,6 +139,14 @@ public class GameManager : MonoBehaviour
 		_citizens.Add(citizen);
 	}
 
+	void SpawnResBox(Vector3 pos)
+	{
+		Quaternion rot = Random.rotation;
+		rot.x = 0f;
+		rot.z = 0f;
+		Instantiate(_resBoxPrefab, pos, rot);
+	}
+
 	void SpawnResBoxes()
 	{
 		for (int i = 0; i < _resBoxSpawnCount; i++)
@@ -143,10 +154,7 @@ public class GameManager : MonoBehaviour
 			Vector3 target = new Vector3(0f, .5f, 0f);
 			target.x = Random.value * _fieldRadius * 2 - _fieldRadius;
 			target.z = Random.value * _fieldRadius * 2 - _fieldRadius;
-			Quaternion rot = Random.rotation;
-			rot.x = 0f;
-			rot.z = 0f;
-			Instantiate(_resBoxPrefab, target, rot);
+			SpawnResBox(target);
 		}
 	}
 
@@ -162,13 +170,28 @@ public class GameManager : MonoBehaviour
 			RefreshGDPMetrics();
 
 			// Chart stuff
-			float val = _gdpPerPeriod / _citizenSpawnCount;
-			_gdpChart.AddValue(val);
-			Debug.LogWarning(val);
+			float val = _gdpPerPeriod;
+			_totalGdpPerPeriodChart.AddValue(val);
+			_allTimeGdpChart.AddValue(_previousMeasuredGdp);
+			//Debug.LogWarning(val);
 		}
 	}
 
-	void ListenForSpawnInput()
+	void UpdateBoxPriceMetrics()
+	{
+		_boxMetricsTimer += Time.deltaTime;
+		if (_boxMetricsTimer >= _boxMetricsPeriodInSeconds)
+		{
+			_boxMetricsTimer = 0;
+
+			// Chart stuff
+			float val = CurrentAverageResBoxTradingPrice;
+			_avgResBoxTradingPriceChart.AddValue(val);
+			//Debug.LogWarning(val);
+		}
+	}
+
+	void ListenForCitizenSpawnInput()
 	{
         if (Input.GetMouseButtonUp(0))
 		{
@@ -182,12 +205,28 @@ public class GameManager : MonoBehaviour
 		}
 	}
 
+	void ListenForBoxSpawnInput()
+	{
+		if (Input.GetMouseButtonUp(1))
+		{
+			RaycastHit hit;
+			if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out hit, Camera.main.farClipPlane, ~LayerMask.NameToLayer("Floor")))
+			{
+				Vector3 pos = hit.point;
+				pos.y = .5f;
+				SpawnResBox(pos);
+			}
+		}
+	}
+
 	// Update is called once per frame
 	void Update()
     {
-		ListenForSpawnInput();
+		ListenForCitizenSpawnInput();
+		ListenForBoxSpawnInput();
 
 		UpdateGDPMetrics();
+		UpdateBoxPriceMetrics();
 
 		RefreshTotalMoneyLabel();
 		RefreshAverages();
