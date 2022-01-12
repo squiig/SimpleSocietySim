@@ -670,12 +670,12 @@ public class Citizen : MonoBehaviour
 
 	void OnTriggerEnter(Collider collision)
 	{
-		var box = collision.gameObject.GetComponent<ResBox>();
+		var box = collision.transform.parent.GetComponent<ResBox>();
 		if (box != null && !_isIdling)
 		{
 			AddResBoxes(1);
 
-			Destroy(collision.gameObject);
+			Destroy(box.gameObject);
 
 			_secondLabel.text = $"+1 {GameManager.ResBoxSymbol}";
 			_secondLabel.color = Color.cyan;

@@ -27,6 +27,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -43,24 +44,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4ddb647e68e13a4895ae154f5c64c85, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _resBoxPrefab: {fileID: 0}
-  _citizenPrefab: {fileID: 0}
+  _resBoxPrefab: {fileID: 3616936836437254824, guid: fd47f309ecf9c5646b7fd1d37eb946cd,
+    type: 3}
+  _citizenPrefab: {fileID: 891022432897842971, guid: d99372851223ccb4db92f25c4adb228f,
+    type: 3}
   _gdpLabel: {fileID: 0}
   _totalMoneyLabel: {fileID: 0}
   _averageValuationLabel: {fileID: 0}
   _averageTradingPriceLabel: {fileID: 0}
   _fieldRadius: 25
-  _citizenSpawnCount: 5
-  _resBoxSpawnCount: 80
+  _citizenSpawnCount: 10
   _citizenStartingMoneyMin: 10
-  _citizenStartingMoneyMax: 500
-  _citizenMinStartingResBoxes: 0
-  _citizenMaxStartingResBoxes: 20
+  _citizenStartingMoneyMax: 1000
   _priceMagnifier: 100
   _travelCostPerMeter: 1
-  _gdpPeriodInSeconds: 5
+  _resBoxSpawnCount: 100
+  _enableResBoxRespawning: 1
+  _resBoxRespawnPeriodInSeconds: 10
+  _resBoxRespawnTimer: 0
+  _citizenMinStartingResBoxes: 0
+  _citizenMaxStartingResBoxes: 100
   _totalResBoxesInMarket: 0
   _totalExpenditures: 0
   _gdpTimer: 0
+  _gdpPeriodInSeconds: 1
   _gdpPerPeriod: 0
   _previousMeasuredGdp: 0
+  _totalGdpPerPeriodChart: {fileID: 0}
+  _allTimeGdpChart: {fileID: 0}
+  _boxMetricsTimer: 0
+  _boxMetricsPeriodInSeconds: 1
+  _avgResBoxTradingPriceChart: {fileID: 0}

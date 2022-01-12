@@ -27,7 +27,7 @@ public class GameManager : MonoBehaviour
 
 	[SerializeField] private GameObject _resBoxPrefab;
 	[SerializeField] private GameObject _citizenPrefab;
-	[SerializeField] private TMP_Text _gdpLabel;
+	[SerializeField] private TMP_Text _populationLabel;
 	[SerializeField] private TMP_Text _totalMoneyLabel;
 	[SerializeField] private TMP_Text _averageValuationLabel;
 	[SerializeField] private TMP_Text _averageTradingPriceLabel;
@@ -35,13 +35,17 @@ public class GameManager : MonoBehaviour
 	[Header("Settings")]
 	[SerializeField] private float _fieldRadius = 25f;
 	[SerializeField] private int _citizenSpawnCount = 3;
-	[SerializeField] private int _resBoxSpawnCount = 80;
 	[SerializeField] private float _citizenStartingMoneyMin = 10f;
 	[SerializeField] private float _citizenStartingMoneyMax = 100f;
-	[SerializeField] private int _citizenMinStartingResBoxes = 0;
-	[SerializeField] private int _citizenMaxStartingResBoxes = 10;
 	[SerializeField] private float _priceMagnifier = 100f;
 	[SerializeField] private float _travelCostPerMeter = 1f;
+	[Space]
+	[SerializeField] private int _resBoxSpawnCount = 80;
+	[SerializeField] private bool _enableResBoxRespawning = true;
+	[SerializeField] private float _resBoxRespawnPeriodInSeconds = 10f;
+	[SerializeField, ReadOnly] private float _resBoxRespawnTimer;
+	[SerializeField] private int _citizenMinStartingResBoxes = 0;
+	[SerializeField] private int _citizenMaxStartingResBoxes = 10;
 
 	[Header("Metrics")]
 	[SerializeField, ReadOnly] private int _totalResBoxesInMarket;
@@ -51,8 +55,8 @@ public class GameManager : MonoBehaviour
 	[SerializeField] private float _gdpPeriodInSeconds = 5f;
 	[SerializeField, ReadOnly] private float _gdpPerPeriod;
 	[SerializeField, ReadOnly] private float _previousMeasuredGdp;
-	[SerializeField] private RunChart _totalGdpPerPeriodChart;
-	[SerializeField] private RunChart _allTimeGdpChart;
+	[SerializeField] private RunChart _nominalGdpChart;
+	[SerializeField] private RunChart _nominalGdpPerCapitaChart;
 	[Space]
 	[SerializeField, ReadOnly] private float _boxMetricsTimer;
 	[SerializeField] private float _boxMetricsPeriodInSeconds = 5f;
@@ -87,19 +91,15 @@ public class GameManager : MonoBehaviour
 		_totalResBoxesInMarket = _resBoxSpawnCount;
 
 		SpawnInitialCitizens();
-		SpawnResBoxes();
+		SpawnResBoxes(_resBoxSpawnCount);
 
-		RefreshGDPMetrics();
+		RefreshCitizenMetrics();
 		RefreshTotalMoneyLabel();
 	}
 
-	/// <summary>
-	/// Updates GDP related GUIs.
-	/// </summary>
-	void RefreshGDPMetrics()
+	void RefreshCitizenMetrics()
 	{
-		float gdp = PeriodicalNominalGDP;
-		_gdpLabel.text = $"{FormatMoney(gdp == 0 ? 0 : gdp / _citizenSpawnCount)} avg. GDP p/c/p/p";
+		_populationLabel.text = $"Population: {_citizens.Count}";
 	}
 
 	void RefreshTotalMoneyLabel()
@@ -139,22 +139,27 @@ public class GameManager : MonoBehaviour
 		_citizens.Add(citizen);
 	}
 
+	void SpawnResBox(Vector3 pos, Quaternion rot)
+	{
+		Instantiate(_resBoxPrefab, pos, rot);
+	}
+
 	void SpawnResBox(Vector3 pos)
 	{
 		Quaternion rot = Random.rotation;
 		rot.x = 0f;
 		rot.z = 0f;
-		Instantiate(_resBoxPrefab, pos, rot);
+		SpawnResBox(pos, rot);
 	}
 
-	void SpawnResBoxes()
+	void SpawnResBoxes(int amount)
 	{
-		for (int i = 0; i < _resBoxSpawnCount; i++)
+		for (int i = 0; i < amount; i++)
 		{
-			Vector3 target = new Vector3(0f, .5f, 0f);
+			Vector3 target = new Vector3(0f, 100f, 0f);
 			target.x = Random.value * _fieldRadius * 2 - _fieldRadius;
 			target.z = Random.value * _fieldRadius * 2 - _fieldRadius;
-			SpawnResBox(target);
+			SpawnResBox(target, Random.rotation);
 		}
 	}
 
@@ -167,12 +172,11 @@ public class GameManager : MonoBehaviour
 			_gdpPerPeriod = AllTimeNominalGDP - _previousMeasuredGdp;
 			_previousMeasuredGdp = AllTimeNominalGDP;
 
-			RefreshGDPMetrics();
+			RefreshCitizenMetrics();
 
 			// Chart stuff
-			float val = _gdpPerPeriod;
-			_totalGdpPerPeriodChart.AddValue(val);
-			_allTimeGdpChart.AddValue(_previousMeasuredGdp);
+			_nominalGdpChart.AddValue(_gdpPerPeriod);
+			_nominalGdpPerCapitaChart.AddValue(_gdpPerPeriod / _citizens.Count);
 			//Debug.LogWarning(val);
 		}
 	}
@@ -188,6 +192,16 @@ public class GameManager : MonoBehaviour
 			float val = CurrentAverageResBoxTradingPrice;
 			_avgResBoxTradingPriceChart.AddValue(val);
 			//Debug.LogWarning(val);
+		}
+	}
+
+	void UpdateBoxRespawnClock()
+	{
+		_resBoxRespawnTimer += Time.deltaTime;
+		if (_resBoxRespawnTimer >= _resBoxRespawnPeriodInSeconds)
+		{
+			_resBoxRespawnTimer = 0;
+			SpawnResBoxes(Mathf.RoundToInt(Random.value * (_resBoxSpawnCount / 2)));
 		}
 	}
 
@@ -227,6 +241,11 @@ public class GameManager : MonoBehaviour
 
 		UpdateGDPMetrics();
 		UpdateBoxPriceMetrics();
+
+		if (_enableResBoxRespawning)
+		{
+			UpdateBoxRespawnClock();
+		}
 
 		RefreshTotalMoneyLabel();
 		RefreshAverages();

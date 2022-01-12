@@ -136,7 +136,7 @@ GameObject:
   - component: {fileID: 337772094}
   - component: {fileID: 337772093}
   m_Layer: 5
-  m_Name: GDP label
+  m_Name: Population label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -182,7 +182,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u20AC100,000.00 GDP per capita"
+  m_text: 'Population: 0'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -743,7 +743,7 @@ PrefabInstance:
     - target: {fileID: 4862735620815481711, guid: 14e19cc2cb6f62440b44f2c600e1c245,
         type: 3}
       propertyPath: _title
-      value: Total GDP p/period
+      value: GDP (nominal)
       objectReference: {fileID: 0}
     - target: {fileID: 4862735620815481711, guid: 14e19cc2cb6f62440b44f2c600e1c245,
         type: 3}
@@ -863,7 +863,7 @@ PrefabInstance:
     - target: {fileID: 8933934701269387178, guid: 14e19cc2cb6f62440b44f2c600e1c245,
         type: 3}
       propertyPath: m_Name
-      value: TotalGdpPerPeriodChart
+      value: NominalGdpChart
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 14e19cc2cb6f62440b44f2c600e1c245, type: 3}
@@ -1309,7 +1309,7 @@ PrefabInstance:
     - target: {fileID: 4862735620815481711, guid: 14e19cc2cb6f62440b44f2c600e1c245,
         type: 3}
       propertyPath: _title
-      value: All-Time Nominal GDP
+      value: GDP (nominal) per capita
       objectReference: {fileID: 0}
     - target: {fileID: 4862735620815481711, guid: 14e19cc2cb6f62440b44f2c600e1c245,
         type: 3}
@@ -1429,7 +1429,7 @@ PrefabInstance:
     - target: {fileID: 8933934701269387178, guid: 14e19cc2cb6f62440b44f2c600e1c245,
         type: 3}
       propertyPath: m_Name
-      value: AllTimeGdpChart
+      value: NominalGdpPerCapitaChart
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 14e19cc2cb6f62440b44f2c600e1c245, type: 3}
@@ -1618,6 +1618,39 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26d920605b8ee564da97f79d8f1520f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &2660570779078589395
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2660570779078589399}
+  - component: {fileID: 6129302067088363802}
+  - component: {fileID: 6129302067088363803}
+  m_Layer: 0
+  m_Name: DeathNet
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2660570779078589399
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2660570779078589395}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -99.3, z: 0}
+  m_LocalScale: {x: 166.67499, y: 3.3335, z: 166.67499}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 7
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &3856364297114811124
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1702,26 +1735,9 @@ PrefabInstance:
       objectReference: {fileID: 337772093}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
-      propertyPath: _resBoxPrefab
-      value: 
-      objectReference: {fileID: 3616936836437254824, guid: fd47f309ecf9c5646b7fd1d37eb946cd,
-        type: 3}
-    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
-        type: 3}
-      propertyPath: _citizenPrefab
-      value: 
-      objectReference: {fileID: 891022432897842971, guid: d99372851223ccb4db92f25c4adb228f,
-        type: 3}
-    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
-        type: 3}
       propertyPath: _totalGdpChart
       value: 
       objectReference: {fileID: 1278881632}
-    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
-        type: 3}
-      propertyPath: _priceMagnifier
-      value: 100
-      objectReference: {fileID: 0}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
       propertyPath: totalMoneyLabel
@@ -1734,14 +1750,19 @@ PrefabInstance:
       objectReference: {fileID: 1826578143}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
+      propertyPath: _nominalGdpChart
+      value: 
+      objectReference: {fileID: 1278881632}
+    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
+        type: 3}
+      propertyPath: _populationLabel
+      value: 
+      objectReference: {fileID: 337772093}
+    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
+        type: 3}
       propertyPath: _totalMoneyLabel
       value: 
       objectReference: {fileID: 1091514985}
-    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
-        type: 3}
-      propertyPath: _resBoxSpawnCount
-      value: 100
-      objectReference: {fileID: 0}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
       propertyPath: citizenSpawnCount
@@ -1750,12 +1771,7 @@ PrefabInstance:
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
       propertyPath: _citizenSpawnCount
-      value: 10
-      objectReference: {fileID: 0}
-    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
-        type: 3}
-      propertyPath: _gdpPeriodInSeconds
-      value: 1
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
@@ -1779,11 +1795,6 @@ PrefabInstance:
       objectReference: {fileID: 1278881632}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
-      propertyPath: _citizenStartingMoneyMax
-      value: 1000
-      objectReference: {fileID: 0}
-    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
-        type: 3}
       propertyPath: averageTradingPriceLabel
       value: 
       objectReference: {fileID: 1502697304}
@@ -1794,19 +1805,14 @@ PrefabInstance:
       objectReference: {fileID: 1502697304}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
-      propertyPath: _boxMetricsPeriodInSeconds
-      value: 1
-      objectReference: {fileID: 0}
+      propertyPath: _nominalGdpPerCapitaChart
+      value: 
+      objectReference: {fileID: 1826578143}
     - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
         type: 3}
       propertyPath: _avgResBoxTradingPriceChart
       value: 
       objectReference: {fileID: 1856290946}
-    - target: {fileID: 3856364296820295595, guid: a1adf4d8ecc0ad148860229ee8b4e93d,
-        type: 3}
-      propertyPath: _citizenMaxStartingResBoxes
-      value: 100
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a1adf4d8ecc0ad148860229ee8b4e93d, type: 3}
 --- !u!1001 &4966633335228986455
@@ -1883,3 +1889,29 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 328ea320d57965844a58e0012132fb1a, type: 3}
+--- !u!64 &6129302067088363802
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2660570779078589395}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &6129302067088363803
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2660570779078589395}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf024265a0f5f1a4f804be90a9afda69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

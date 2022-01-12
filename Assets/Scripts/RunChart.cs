@@ -47,12 +47,10 @@ public class RunChart : MonoBehaviour
 	[SerializeField] private string _yMarkerPrefix;
 	[SerializeField] private string _yMarkerSuffix;
 
-	private Queue<GameObject> _chartPointObjects;
 	private Queue<ChartPoint> _chartPoints;
 
 	void Awake()
 	{
-		_chartPointObjects = new Queue<GameObject>();
 		_chartPoints = new Queue<ChartPoint>();
 	}
 
@@ -69,26 +67,16 @@ public class RunChart : MonoBehaviour
 
 	public void AddValue(float value)
 	{
-		float xValue = _highestXMarker + _xMarkerInterval;
-		float yValue = value;
-		float xPos = Width; // aka, on the right-most x-axis
-		float yPos = (value / _highestYMarker) * Height; // percentage of the chart height
-		var go = Instantiate(_pointPrefab, _pointContainer.transform);
-		Vector2 anchoredPos = new Vector2(xPos + _xAxesOffset, yPos + _yAxesOffset);
-		go.GetComponent<RectTransform>().anchoredPosition = anchoredPos;
-		ChartPoint chartPoint = new ChartPoint(this, xValue, yValue, xPos, yPos, ChartPosToConnectionPos(anchoredPos.x, anchoredPos.y), go);
+		var chartPoint = CreateChartPoint(value);
 
-		if (_chartPointObjects.Count > 0)
+		if (_chartPoints.Count > 0)
 		{
 			ShiftChartLeft();
 		}
 
 		_chartPoints.Enqueue(chartPoint);
-		_chartPointObjects.Enqueue(go);
 
 		CondenseVertically();
-
-		RefreshLineRendererPoints();
 	}
 
 	public void ConfigureXAxis(float min, float interval)
@@ -110,6 +98,25 @@ public class RunChart : MonoBehaviour
 		_yMarkerInterval = Mathf.Max(.25f, yMarkerInterval);//Mathf.CeilToInt(yMarkerInterval));
 
 		RefreshYAxisLabels();
+	}
+
+	ChartPoint CreateChartPoint(float value)
+	{
+		float xValue = _highestXMarker + _xMarkerInterval;
+		float yValue = value;
+		float xPos = Width; // aka, on the right-most x-axis
+		var go = Instantiate(_pointPrefab, _pointContainer.transform);
+		var point = new ChartPoint(this, xValue, yValue, xPos, 0, Vector2.zero, go);
+		RepositionChartPoint(point);
+		return point;
+	}
+
+	void RepositionChartPoint(ChartPoint chartPoint)
+	{
+		chartPoint.YPos = (chartPoint.YValue / _highestYMarker) * Height; // percentage of the chart height
+		Vector2 anchoredPos = new Vector2(chartPoint.XPos + _xAxesOffset, chartPoint.YPos + _yAxesOffset);
+		chartPoint.PointObject.GetComponent<RectTransform>().anchoredPosition = anchoredPos;
+		chartPoint.ConnectionPoint = ChartPosToConnectionPos(anchoredPos.x, anchoredPos.y);
 	}
 
 	/// <summary>
@@ -141,8 +148,8 @@ public class RunChart : MonoBehaviour
 		// Remove the left-most point if it goes off the chart
 		if (_chartPoints.Count >= _xAxes.Count)
 		{
-			Destroy(_chartPointObjects.Dequeue());
-			_chartPoints.Dequeue();
+			var chartPoint = _chartPoints.Dequeue();
+			Destroy(chartPoint.PointObject);
 		}
 
 		// Move all other points one x-axis to the left
@@ -188,7 +195,7 @@ public class RunChart : MonoBehaviour
 		if (newHighestYMarker > 10)
 		{
 			int i = (int)Mathf.Pow(10, Mathf.FloorToInt(Mathf.Log10(newHighestYMarker)));
-			newHighestYMarker = newHighestYMarker - (newHighestYMarker % i) + (i / 2);
+			newHighestYMarker = newHighestYMarker - (newHighestYMarker % i) + i;
 		}
 
 		int newLowestYMarker = (int)Mathf.Min(0, (Mathf.RoundToInt(LowestValue / _yMarkerInterval) + (int)Mathf.Sign(LowestValue)) * _yMarkerInterval);
@@ -198,10 +205,10 @@ public class RunChart : MonoBehaviour
 		// Chart points
 		foreach (var point in _chartPoints)
 		{
-			point.YPos = (point.YValue / _highestYMarker) * Height;
-			point.ConnectionPoint = ChartPosToConnectionPos(point.XPos, point.YPos);
-			point.PointObject.GetComponent<RectTransform>().anchoredPosition = new Vector2(point.XPos + _xAxesOffset, point.YPos + _yAxesOffset);
+			RepositionChartPoint(point);
 		}
+
+		RefreshLineRendererPoints();
 	}
 
 	void ClearPoints()
@@ -211,8 +218,7 @@ public class RunChart : MonoBehaviour
 			Destroy(_pointContainer.transform.GetChild(i).gameObject);
 		}
 
-		_chartPointObjects = new Queue<GameObject>();
-
+		_chartPoints = new Queue<ChartPoint>();
 		_lineRenderer.Points = new Vector2[] { };
 	}
 
