@@ -51,7 +51,7 @@ public class RunChart : MonoBehaviour
 
 	void Awake()
 	{
-		_chartPoints = new Queue<ChartPoint>();
+		_chartPoints = new Queue<ChartPoint>(_yAxes.Count);
 	}
 
 	// Start is called before the first frame update
@@ -63,6 +63,17 @@ public class RunChart : MonoBehaviour
 
 		ConfigureXAxis(-_xAxes.Count + 1, 1);
 		ConfigureYAxis(0, 100);
+	}
+
+	private void Update()
+	{
+		if (_chartPoints.Count > 0)
+		{
+			if (HighestValue > _highestYMarker || LowestValue < _lowestYMarker)
+			{
+				CondenseVertically();
+			}
+		}
 	}
 
 	public void AddValue(float value)
@@ -91,9 +102,9 @@ public class RunChart : MonoBehaviour
 	public void ConfigureYAxis(float min, float max)
 	{
 		_lowestYMarker = min;
-		_highestYMarker = Mathf.Max(max, 1);
+		_highestYMarker = max;
 
-		float yMarkerInterval = (Mathf.Max(max, 1) - min) / (_yAxes.Count - 1);
+		float yMarkerInterval = (max - min) / (_yAxes.Count - 1);
 
 		_yMarkerInterval = Mathf.Max(.25f, yMarkerInterval);//Mathf.CeilToInt(yMarkerInterval));
 
@@ -190,15 +201,38 @@ public class RunChart : MonoBehaviour
 	void CondenseVertically()
 	{
 		// Markers
-		int newHighestYMarker = (int)((Mathf.RoundToInt(HighestValue / _yMarkerInterval) + (int)Mathf.Sign(HighestValue)) * _yMarkerInterval);
+		int newHighestYMarker;
+		int newLowestYMarker;
 
-		if (newHighestYMarker > 1)
+		if (HighestValue < 0)
 		{
-			int i = (int)Mathf.Pow(10, Mathf.FloorToInt(Mathf.Log10(newHighestYMarker)));
-			newHighestYMarker = newHighestYMarker - (newHighestYMarker % i) + i;
+			newHighestYMarker = 0;
+		}
+		else
+		{
+			newHighestYMarker = Mathf.CeilToInt((Mathf.RoundToInt(HighestValue / _yMarkerInterval) + (int)Mathf.Sign(HighestValue)) * _yMarkerInterval);
+
+			if (newHighestYMarker > 1)
+			{
+				int i = (int)Mathf.Pow(10, Mathf.FloorToInt(Mathf.Log10(Mathf.Abs(newHighestYMarker))));
+				newHighestYMarker = newHighestYMarker - (Mathf.Abs(newHighestYMarker) % i) + i;
+			}
 		}
 
-		int newLowestYMarker = (int)Mathf.Min(0, (Mathf.RoundToInt(LowestValue / _yMarkerInterval) + (int)Mathf.Sign(LowestValue)) * _yMarkerInterval);
+		if (LowestValue > 0)
+		{
+			newLowestYMarker = 0;
+		}
+		else
+		{
+			newLowestYMarker = Mathf.FloorToInt((Mathf.RoundToInt(LowestValue / _yMarkerInterval) + (int)Mathf.Sign(LowestValue)) * _yMarkerInterval);
+
+			if (newLowestYMarker < -1)
+			{
+				int i = (int)Mathf.Pow(10, Mathf.FloorToInt(Mathf.Log10(Mathf.Abs(newLowestYMarker))));
+				newLowestYMarker = newLowestYMarker + (Mathf.Abs(newLowestYMarker) % i) - i;
+			}
+		}
 
 		ConfigureYAxis(newLowestYMarker, newHighestYMarker);
 

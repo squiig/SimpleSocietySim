@@ -11,7 +11,7 @@ public class GameManager : MonoBehaviour
 	/// </summary>
 	public float AllTimeNominalGDP => _totalExpenditures;
 
-	public float PeriodicalNominalGDP => _gdpPerPeriod;
+	public float PeriodicalNominalGDP => _gdpPerFP;
 
 	public static string CurrencySymbol => "€"; // ƒ
 
@@ -25,12 +25,16 @@ public class GameManager : MonoBehaviour
 
 	public float TravelCostPerMeter => _travelCostPerMeter;
 
+	public BoxVendor BoxVendor { get => _boxVendor; set => _boxVendor = value; }
+	public float FinancialPeriodInSeconds => _financialPeriodInSeconds;
+
 	[SerializeField] private GameObject _resBoxPrefab;
 	[SerializeField] private GameObject _citizenPrefab;
 	[SerializeField] private TMP_Text _populationLabel;
 	[SerializeField] private TMP_Text _totalMoneyLabel;
 	[SerializeField] private TMP_Text _averageValuationLabel;
 	[SerializeField] private TMP_Text _averageTradingPriceLabel;
+	[SerializeField] private BoxVendor _boxVendor;
 
 	[Header("Settings")]
 	[SerializeField] private float _fieldRadius = 25f;
@@ -51,12 +55,14 @@ public class GameManager : MonoBehaviour
 	[SerializeField, ReadOnly] private int _totalResBoxesInMarket;
 	[SerializeField, ReadOnly] private float _totalExpenditures;
 	[Space]
-	[SerializeField, ReadOnly] private float _gdpTimer;
-	[SerializeField] private float _gdpPeriodInSeconds = 5f;
-	[SerializeField, ReadOnly] private float _gdpPerPeriod;
+	[SerializeField] private float _financialPeriodInSeconds = 5f;
+	[SerializeField, ReadOnly] private float _financialPeriodTimer;
+	[SerializeField, ReadOnly] private float _gdpPerFP;
 	[SerializeField, ReadOnly] private float _previousMeasuredGdp;
 	[SerializeField] private RunChart _nominalGdpChart;
 	[SerializeField] private RunChart _nominalGdpPerCapitaChart;
+	[SerializeField, ReadOnly] private float _avgProfitsPerFP;
+	[SerializeField] private RunChart _avgProfitsChart;
 	[Space]
 	[SerializeField, ReadOnly] private float _boxMetricsTimer;
 	[SerializeField] private float _boxMetricsPeriodInSeconds = 5f;
@@ -163,22 +169,30 @@ public class GameManager : MonoBehaviour
 		}
 	}
 
-	void UpdateGDPMetrics()
+	void TickFinancialPeriodTimer()
 	{
-		_gdpTimer += Time.deltaTime;
-		if (_gdpTimer >= _gdpPeriodInSeconds)
+		_financialPeriodTimer += Time.deltaTime;
+		if (_financialPeriodTimer >= _financialPeriodInSeconds)
 		{
-			_gdpTimer = 0;
-			_gdpPerPeriod = AllTimeNominalGDP - _previousMeasuredGdp;
-			_previousMeasuredGdp = AllTimeNominalGDP;
+			_financialPeriodTimer = 0;
 
+			UpdateFinancialMetrics();
 			RefreshCitizenMetrics();
-
-			// Chart stuff
-			_nominalGdpChart.AddValue(_gdpPerPeriod);
-			_nominalGdpPerCapitaChart.AddValue(_gdpPerPeriod / _citizens.Count);
-			//Debug.LogWarning(val);
 		}
+	}
+
+	void UpdateFinancialMetrics()
+	{
+		// GDP stuff
+		_gdpPerFP = AllTimeNominalGDP - _previousMeasuredGdp;
+		_previousMeasuredGdp = AllTimeNominalGDP;
+
+		_nominalGdpChart.AddValue(_gdpPerFP);
+		_nominalGdpPerCapitaChart.AddValue(_gdpPerFP / _citizens.Count);
+
+		// Other
+		_avgProfitsPerFP = _citizens.Select(x => x.HistoricalPeriodProfits.LastOrDefault()).Average();
+		_avgProfitsChart.AddValue(_avgProfitsPerFP);
 	}
 
 	void UpdateBoxPriceMetrics()
@@ -239,7 +253,7 @@ public class GameManager : MonoBehaviour
 		ListenForCitizenSpawnInput();
 		ListenForBoxSpawnInput();
 
-		UpdateGDPMetrics();
+		TickFinancialPeriodTimer();
 		UpdateBoxPriceMetrics();
 
 		if (_enableResBoxRespawning)

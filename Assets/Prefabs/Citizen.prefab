@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 4764098296701537902}
   - component: {fileID: 7242088365015946206}
   m_Layer: 5
-  m_Name: Text (TMP) (1)
+  m_Name: profit label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -28,6 +28,7 @@ RectTransform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1588261704353265627}
   m_RootOrder: 2
@@ -165,6 +166,7 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1588261704353265627}
   m_Father: {fileID: 0}
@@ -263,11 +265,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _moneyLabel: {fileID: 8334080152486133519}
-  _secondLabel: {fileID: 8925566684026345133}
-  _thirdLabel: {fileID: 7242088365015946206}
+  _boxLabel: {fileID: 8925566684026345133}
+  _profitLabel: {fileID: 7242088365015946206}
   _speed: 10
   _fieldRadius: 25
   _idlingRadius: 0.5
+  _initialCostOfLivingPerSecond: 3
+  _immediateProfitGrowthValuation: 0.1
   _baseResBoxValuation: 0
   _totalResBoxesOwned: 0
   _opportunityWaitingTime: 1
@@ -276,18 +280,22 @@ MonoBehaviour:
   _tradeInvestmentFraction: 0.2
   _moneyInWallet: 0
   _startingMoney: 0
+  _startingResBoxes: 0
   _maxBuyingPriceMetric: 0
   _minSellingPriceMetric: 0
   _isIdling: 0
   _currentStrategy: 0
+  _lastBusinessStrategy: 0
   _totalResBoxesGathered: 0
   _totalGatheringTravelCosts: 0
   _latestProfit: 0
   _latestProfitMargin: 0
-  _profitGrowth: 0
+  _totalProfitsThisPeriod: 0
+  _immediateProfitGrowth: 0
   _currentProfitExpectation: 0
   _currentBuyingGoalMetric: 0
   _currentSellingGoalMetric: 0
+  _currentCostOfLivingPerSecond: 0
   _lastFailedTradePartner: {fileID: 0}
 --- !u!1 &2721646729544634683
 GameObject:
@@ -301,7 +309,7 @@ GameObject:
   - component: {fileID: 6067262791227832744}
   - component: {fileID: 8334080152486133519}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: money label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -317,6 +325,7 @@ RectTransform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1588261704353265627}
   m_RootOrder: 0
@@ -435,7 +444,7 @@ GameObject:
   - component: {fileID: 6375816828477750869}
   - component: {fileID: 8925566684026345133}
   m_Layer: 5
-  m_Name: Text (TMP) (2)
+  m_Name: box label
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -451,6 +460,7 @@ RectTransform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1588261704353265627}
   m_RootOrder: 1
@@ -586,6 +596,7 @@ RectTransform:
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4559153010040649756}
   - {fileID: 5523988060540922729}
