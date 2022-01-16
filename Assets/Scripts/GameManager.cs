@@ -215,7 +215,8 @@ public class GameManager : MonoBehaviour
 		if (_resBoxRespawnTimer >= _resBoxRespawnPeriodInSeconds)
 		{
 			_resBoxRespawnTimer = 0;
-			SpawnResBoxes(Mathf.RoundToInt(Random.value * (_resBoxSpawnCount / 2)));
+			int citizensAlive = _citizens.Where(x => x.IsAlive).Count();
+			SpawnResBoxes(Mathf.RoundToInt(Mathf.Min(_resBoxSpawnCount * (citizensAlive / _resBoxSpawnCount)))); // spawn less if less alive
 		}
 	}
 
@@ -263,5 +264,24 @@ public class GameManager : MonoBehaviour
 
 		RefreshTotalMoneyLabel();
 		RefreshAverages();
+	}
+
+	void OnEnable()
+	{
+		Application.logMessageReceived += HandleLog;
+	}
+
+	void OnDisable()
+	{
+		Application.logMessageReceived -= HandleLog;
+	}
+
+	void HandleLog(string logString, string stackTrace, LogType type)
+	{
+
+		if (type != LogType.Log)
+		{
+			int i = 0;
+		}
 	}
 }

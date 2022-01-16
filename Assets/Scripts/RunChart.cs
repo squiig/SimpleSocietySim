@@ -5,13 +5,17 @@ using UnityEngine;
 using UnityEngine.UI.Extensions;
 using UnityEditor;
 using System.Linq;
+using System;
+using UnityEngine.UI;
 
 /// <summary>
 /// A chart that displays data over time.
 /// </summary>
 public class RunChart : MonoBehaviour
 {
-	public float Width => (_xAxes.Count - 1) * _xAxesSpacing;
+	public float XSpacing => ((RectTransform)transform).rect.width / _xAxes.Count;
+
+	public float Width => ((RectTransform)transform).rect.width - XSpacing;
 	public float Height => (_yAxes.Count - 1) * _yAxesSpacing;
 
 	public float HighestValue => _chartPoints.Select(x => x.YValue).Max();
@@ -29,7 +33,7 @@ public class RunChart : MonoBehaviour
 
 	[Header("Axes")]
 	[SerializeField] private List<GameObject> _xAxes;
-	[SerializeField] private float _xAxesSpacing = 100;
+	[SerializeField] private HorizontalLayoutGroup _xAxisGroup;
 	[SerializeField] private float _xAxesOffset = 50;
 	[SerializeField] private List<GameObject> _yAxes;
 	[SerializeField] private float _yAxesSpacing = 50;
@@ -51,6 +55,7 @@ public class RunChart : MonoBehaviour
 
 	void Awake()
 	{
+		_yMarkerInterval = 0.25f;
 		_chartPoints = new Queue<ChartPoint>(_yAxes.Count);
 	}
 
@@ -93,7 +98,7 @@ public class RunChart : MonoBehaviour
 	public void ConfigureXAxis(float min, float interval)
 	{
 		_lowestXMarker = min;
-		_highestXMarker = min + interval * (_xAxes.Count - 1);
+		_highestXMarker = min + interval * (_xAxes.Count);
 		_xMarkerInterval = interval;
 
 		RefreshXAxisLabels();
@@ -124,7 +129,9 @@ public class RunChart : MonoBehaviour
 
 	void RepositionChartPoint(ChartPoint chartPoint)
 	{
-		chartPoint.YPos = (chartPoint.YValue / _highestYMarker) * Height; // percentage of the chart height
+		chartPoint.YPos = chartPoint.YValue >= 0 ? 
+			(chartPoint.YValue / _highestYMarker) * Height : 
+			(chartPoint.YValue / _lowestYMarker) * Height; // percentage of the chart height
 		Vector2 anchoredPos = new Vector2(chartPoint.XPos + _xAxesOffset, chartPoint.YPos + _yAxesOffset);
 		chartPoint.PointObject.GetComponent<RectTransform>().anchoredPosition = anchoredPos;
 		chartPoint.ConnectionPoint = ChartPosToConnectionPos(anchoredPos.x, anchoredPos.y);
@@ -166,9 +173,9 @@ public class RunChart : MonoBehaviour
 		// Move all other points one x-axis to the left
 		foreach (var point in _chartPoints)
 		{
-			point.XPos -= _xAxesSpacing;
+			point.XPos -= XSpacing;
 			point.ConnectionPoint = ChartPosToConnectionPos(point.XPos, point.YPos);
-			point.PointObject.GetComponent<RectTransform>().anchoredPosition += Vector2.left * _xAxesSpacing;
+			point.PointObject.GetComponent<RectTransform>().anchoredPosition += Vector2.left * XSpacing;
 		}
 	}
 
@@ -184,7 +191,7 @@ public class RunChart : MonoBehaviour
 		for (int i = 0; i < len; i++)
 		{
 			TMP_Text lineLabel = _xAxes[i].GetComponentInChildren<TMP_Text>();
-			lineLabel.text = $"{_xMarkerPrefix}{(i == len - 1 ? _highestXMarker : _lowestXMarker + i * _xMarkerInterval)}{_xMarkerSuffix}";
+			lineLabel.text = $"{_xMarkerPrefix}{(i == len ? _highestXMarker : _lowestXMarker + i * _xMarkerInterval)}{_xMarkerSuffix}";
 		}
 	}
 

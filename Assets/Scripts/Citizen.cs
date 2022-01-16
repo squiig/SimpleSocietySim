@@ -289,7 +289,7 @@ public class Citizen : MonoBehaviour
 	{
 		_moneyInWallet = 0f;
 
-		transform.Rotate(Vector3.back, 90f);
+		transform.Rotate(Vector3.back + Vector3.right * Random.Range(-1f, 1f), Random.value > .5f ? 90f : -90f);
 		transform.position += Vector3.down / 2;
 
 		_moneyLabel.gameObject.SetActive(false);
@@ -840,6 +840,7 @@ public class Citizen : MonoBehaviour
 	void RefreshMoneyLabel()
 	{
 		_moneyLabel.text = $"{GameManager.FormatMoney(MoneyInWallet)}";
+		_moneyLabel.color = AreProfitsIncreasing ? Color.green : Color.red;
 	}
 
 	void RefreshSecondaryLabels()
@@ -849,7 +850,7 @@ public class Citizen : MonoBehaviour
 		_boxLabel.text = boxStatus;
 		_boxLabel.color = new Color(0f, 0.75f, 1f);
 
-		float profitValue = _latestProfitMargin;
+		float profitValue = (float)Math.Round(_latestProfitMargin, 2);
 		string profitStatus = profitValue == 0 ? "-" : $"{(profitValue > 0 ? "+" : "")}{profitValue * 100:n2}%";
 
 		_profitLabel.text = profitStatus;
