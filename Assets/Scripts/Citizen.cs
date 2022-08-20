@@ -323,7 +323,9 @@ public class Citizen : MonoBehaviour
 		}
 
 		nextStep.y = _origin.y;
+		Vector3 dir = nextStep - transform.position;
 		transform.position = nextStep;
+		transform.rotation = Quaternion.LookRotation(dir);
 	}
 
 	void SetIdling(bool idle)

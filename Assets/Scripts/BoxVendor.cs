@@ -124,6 +124,8 @@ public class BoxVendor : MonoBehaviour
 		Vector3 nextStep = Vector3.MoveTowards(transform.position, _target, _speed * Time.deltaTime);
 
 		nextStep.y = _origin.y;
+		Vector3 dir = nextStep - transform.position;
 		transform.position = nextStep;
+		transform.rotation = Quaternion.LookRotation(dir);
 	}
 }
