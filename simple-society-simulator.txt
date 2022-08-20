@@ -12,7 +12,7 @@ SIMPLE SOCIETY SIMULATOR
 
 - citizens have a variety of BUSINESS STRATEGIES:
 
-	- gathering stuff (i.e. base productivity)
+	- gathering resources (i.e. base productivity)
 
 	- trading (for which they have to find trading partners themselves)
 
