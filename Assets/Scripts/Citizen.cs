@@ -61,8 +61,11 @@ public class Citizen : MonoBehaviour
 
 	private GameManager _gameManager;
 	private TradeManager _tradeManager;
-	private Vector3 _origin;
-	private Vector3 _target;
+	private Vector3 _originPos;
+	private Vector3 _targetPos;
+	private Quaternion _prevRot;
+	private Quaternion _targetRot;
+	private float _rotTimer;
 	private GameObject _targetObject;
 	private Vector3 _anchor;
 	private float _timer;
@@ -77,6 +80,7 @@ public class Citizen : MonoBehaviour
 
 	[Header("Settings")]
 	[SerializeField] private float _speed = 5f;
+	[SerializeField] private float _rotSpeed = 1f;
 	[SerializeField] private float _fieldRadius = 20f;
 	[SerializeField] private float _idlingRadius = .5f;
 	[Space]
@@ -176,7 +180,7 @@ public class Citizen : MonoBehaviour
 	public void Halt(float timeUntilRestrategizing = 0f)
 	{
 		_anchor = transform.position;
-		_target = _anchor;
+		_targetPos = _anchor;
 		_targetObject = null;
 		BusinessDestinationReached = null;
 		_restrategizingMoment = _totalSeconds + timeUntilRestrategizing;
@@ -187,11 +191,14 @@ public class Citizen : MonoBehaviour
 		_gameManager = FindObjectOfType<GameManager>();
 		_tradeManager = FindObjectOfType<TradeManager>();
 
-		_timer = 1;
+		_timer = 1f;
+		_rotTimer = 0f;
 
-		_origin = transform.position;
-		_target = _origin;
-		_anchor = _origin;
+		_originPos = transform.position;
+		_targetPos = _originPos;
+		_anchor = _originPos;
+		_targetRot = transform.rotation;
+		_prevRot = transform.rotation;
 
 		_baseResBoxValuation = Random.value;
 		_currentProfitExpectation = _startingProfitExpectation;
@@ -236,12 +243,13 @@ public class Citizen : MonoBehaviour
 		// Idling (no cost besides living cost)
 		if (_isIdling && Random.value < .001f)
 		{
-			_target.x = Mathf.Clamp(_anchor.x + Random.Range(-1f, 1f) * _idlingRadius, -_fieldRadius, _fieldRadius);
-			_target.z = Mathf.Clamp(_anchor.z + Random.Range(-1f, 1f) * _idlingRadius, -_fieldRadius, _fieldRadius);
+			float x = Mathf.Clamp(_anchor.x + Random.Range(-1f, 1f) * _idlingRadius, -_fieldRadius, _fieldRadius);
+			float z = Mathf.Clamp(_anchor.z + Random.Range(-1f, 1f) * _idlingRadius, -_fieldRadius, _fieldRadius);
+			SetDestination(x, z);
 		}
 
 		// Traveling
-		float targetDist = Vector3.Distance(transform.position, _target);
+		float targetDist = Vector3.Distance(transform.position, _targetPos);
 		bool isBusinessTrip = !_isIdling;
 
 		bool destinationReached = targetDist <= .001f;
@@ -283,6 +291,8 @@ public class Citizen : MonoBehaviour
 				Die();
 			}
 		}
+
+		Rotate();
 	}
 
 	void Die()
@@ -300,9 +310,23 @@ public class Citizen : MonoBehaviour
 		IsAlive = false;
 	}
 
+	void SetDestination(Vector3 pos)
+	{
+		_targetPos = pos;
+		Vector3 dir = _targetPos - transform.position;
+		_prevRot = _targetRot;
+		_targetRot = Quaternion.LookRotation(dir);
+		_rotTimer = 0f;
+	}
+
+	void SetDestination(float x, float z)
+	{
+		SetDestination(new Vector3(x, _targetPos.y, z));
+	}
+
 	void Move()
 	{
-		Vector3 nextStep = Vector3.MoveTowards(transform.position, _target, _speed * Time.deltaTime);
+		Vector3 nextStep = Vector3.MoveTowards(transform.position, _targetPos, _speed * Time.deltaTime);
 
 		bool isBusinessTrip = !_isIdling;
 		if (isBusinessTrip)
@@ -322,10 +346,22 @@ public class Citizen : MonoBehaviour
 			}
 		}
 
-		nextStep.y = _origin.y;
-		Vector3 dir = nextStep - transform.position;
+		nextStep.y = _originPos.y;
 		transform.position = nextStep;
-		transform.rotation = Quaternion.LookRotation(dir);
+	}
+
+	void Rotate()
+	{
+		if (!IsAlive || Quaternion.Dot(transform.rotation, _targetRot) > .99f)
+			return;
+
+		if (_rotTimer < 1)
+		{
+			_rotTimer += Time.deltaTime * _rotSpeed;
+		}
+
+		Quaternion rot = Quaternion.Slerp(_prevRot, _targetRot, _rotTimer);
+		transform.rotation = rot;
 	}
 
 	void SetIdling(bool idle)
@@ -449,8 +485,8 @@ public class Citizen : MonoBehaviour
 			return false;
 
 		_targetObject = closestBox.gameObject;
-		_target = closestBox.transform.position;
-		_target.y = _origin.y;
+		Vector3 targetPos = closestBox.transform.position;
+		SetDestination(targetPos.x, targetPos.z);
 
 		return true;
 	}
@@ -708,13 +744,13 @@ public class Citizen : MonoBehaviour
 			return false;
 
 		_targetObject = vendor.gameObject;
-		_target = vendor.transform.position;
-		_target.y = _origin.y;
+		Vector3 targetPos = vendor.transform.position;
 
 		// Small offset so not to run into eachother
-		Vector3 dir = (_target - transform.position).normalized;
-		_target -= dir * 2;
+		Vector3 dir = (targetPos - transform.position).normalized;
+		targetPos -= dir * 2;
 
+		SetDestination(targetPos.x, targetPos.z);
 		return true;
 	}
 
@@ -753,13 +789,13 @@ public class Citizen : MonoBehaviour
 			return false;
 
 		_targetObject = closestCitizen.gameObject;
-		_target = closestCitizen.transform.position;
-		_target.y = _origin.y;
+		Vector3 targetPos = closestCitizen.transform.position;
 
 		// Small offset so not to run into eachother
-		Vector3 dir = (_target - transform.position).normalized;
-		_target -= dir * 2;
+		Vector3 dir = (targetPos - transform.position).normalized;
+		targetPos -= dir * 2;
 
+		SetDestination(targetPos.x, targetPos.z);
 		return true;
 	}
 
@@ -831,6 +867,7 @@ public class Citizen : MonoBehaviour
 			_timer = 1;
 			_totalSeconds++;
 
+			// Track financial period
 			if (Mathf.RoundToInt(_totalSeconds) % _gameManager.FinancialPeriodInSeconds == 0)
 			{
 				RegisterProfit(_totalProfitsThisPeriod);

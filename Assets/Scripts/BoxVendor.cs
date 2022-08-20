@@ -10,12 +10,16 @@ public class BoxVendor : MonoBehaviour
 	[SerializeField, ReadOnly] private bool _isIdling; // just for aesthetic effect, doesn't cost money
 
 	[SerializeField] private float _speed = 5f;
+	[SerializeField] private float _rotSpeed = 1f;
 	[SerializeField] private float _fieldRadius = 25f;
 	[SerializeField] private float _idlingRadius = .5f;
 
-	private Vector3 _origin;
-	private Vector3 _target;
-	private Vector3 _anchor;
+	private Vector3 _originPos;
+	private Vector3 _targetPos;
+	private Vector3 _anchorPos;
+	private Quaternion _prevRot;
+	private Quaternion _targetRot;
+	private float _rotTimer;
 
 	GameManager _gameManager;
 
@@ -28,9 +32,11 @@ public class BoxVendor : MonoBehaviour
 	{
 		_gameManager = FindObjectOfType<GameManager>();
 
-		_origin = transform.position;
-		_target = _origin;
-		_anchor = _origin;
+		_originPos = transform.position;
+		_targetPos = _originPos;
+		_anchorPos = _originPos;
+		_targetRot = transform.rotation;
+		_prevRot = transform.rotation;
 	}
 
 	private void Start()
@@ -49,18 +55,21 @@ public class BoxVendor : MonoBehaviour
 		// Idling (no cost)
 		if (_isIdling && Random.value < .001f)
 		{
-			_target.x = Mathf.Clamp(_anchor.x + Random.Range(-1f, 1f) * _idlingRadius, -_fieldRadius, _fieldRadius);
-			_target.z = Mathf.Clamp(_anchor.z + Random.Range(-1f, 1f) * _idlingRadius, -_fieldRadius, _fieldRadius);
+			float x = Mathf.Clamp(_anchorPos.x + Random.Range(-1f, 1f) * _idlingRadius, -_fieldRadius, _fieldRadius);
+			float z = Mathf.Clamp(_anchorPos.z + Random.Range(-1f, 1f) * _idlingRadius, -_fieldRadius, _fieldRadius);
+			SetDestination(x, z);
 		}
 
 		// Traveling
-		float targetDist = Vector3.Distance(transform.position, _target);
+		float targetDist = Vector3.Distance(transform.position, _targetPos);
 
 		bool destinationReached = targetDist <= .001f;
 		if (!destinationReached)
 		{
 			Move();
 		}
+
+		Rotate();
 	}
 
 	/// <summary>
@@ -115,17 +124,45 @@ public class BoxVendor : MonoBehaviour
 
 	public void Halt()
 	{
-		_anchor = transform.position;
-		_target = _anchor;
+		_anchorPos = transform.position;
+		_targetPos = _anchorPos;
+	}
+
+	void SetDestination(Vector3 pos)
+	{
+		_targetPos = pos;
+		Vector3 dir = _targetPos - transform.position;
+		_prevRot = _targetRot;
+		_targetRot = Quaternion.LookRotation(dir);
+		_rotTimer = 0f;
+	}
+
+	void SetDestination(float x, float z)
+	{
+		SetDestination(new Vector3(x, _targetPos.y, z));
 	}
 
 	void Move()
 	{
-		Vector3 nextStep = Vector3.MoveTowards(transform.position, _target, _speed * Time.deltaTime);
+		Vector3 nextStep = Vector3.MoveTowards(transform.position, _targetPos, _speed * Time.deltaTime);
 
-		nextStep.y = _origin.y;
+		nextStep.y = _originPos.y;
 		Vector3 dir = nextStep - transform.position;
 		transform.position = nextStep;
 		transform.rotation = Quaternion.LookRotation(dir);
+	}
+
+	void Rotate()
+	{
+		if (Quaternion.Dot(transform.rotation, _targetRot) > .99f)
+			return;
+
+		if (_rotTimer < 1)
+		{
+			_rotTimer += Time.deltaTime * _rotSpeed;
+		}
+
+		Quaternion rot = Quaternion.Slerp(_prevRot, _targetRot, _rotTimer);
+		transform.rotation = rot;
 	}
 }
